@@ -1,0 +1,13 @@
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Python venv (backendで使う)
+venv/
+
+# Node.js modules (frontendで使う)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
