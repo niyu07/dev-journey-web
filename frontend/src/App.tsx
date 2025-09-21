@@ -1,14 +1,14 @@
-import { useEffect,useState } from 'react'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
   const [message, setMessage] = useState<string>("Loading...");
 
-  useEffect( () => {
+  useEffect(() => {
     fetch("http://localhost:8000/api/hello")
-      .then( (res) => res.json())
-      .then( (data) => setMessage(data.message))
-      .catch( (err) => setMessage("Enter: " + err));
+      .then((res) => res.json())
+      .then((data) => setMessage(data.message))
+      .catch((err) => setMessage("Error: " + err));
   }, []);
 
   return (
@@ -19,4 +19,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
