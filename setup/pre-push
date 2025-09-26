@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# pre-push hook: prevent direct push to main or develop
+while read local_ref local_sha remote_ref remote_sha
+do
+    branch_name=$(echo $remote_ref | sed 's|refs/heads/||')
+
+    if [ "$branch_name" = "main" ] || [ "$branch_name" = "develop" ]; then
+        echo "❌ ERROR: Direct push to $branch_name is not allowed. Please create a Pull Request instead."
+        exit 1
+    fi
+done
+
+exit 0
