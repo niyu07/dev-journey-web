@@ -1,0 +1,24 @@
+#!/bin/bash
+# pre-push hook: prevent direct push to main or develop
+
+protected_branches="main develop"
+
+while read local_ref local_sha remote_ref remote_sha; do
+    # 空行や削除操作をスキップ
+    [ -z "$local_ref" ] && continue
+    [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+    
+    # ブランチ名を抽出（refs/heads/branch_name → branch_name）
+    branch_name=$(basename "$remote_ref")
+    
+    # 保護されたブランチかチェック
+    for protected in $protected_branches; do
+        if [ "$branch_name" = "$protected" ]; then
+            echo "❌ ERROR: Direct push to '$branch_name' is not allowed."
+            echo "   Please create a Pull Request instead."
+            exit 1
+        fi
+    done
+done
+
+exit 0
