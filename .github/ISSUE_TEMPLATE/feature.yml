@@ -1,0 +1,38 @@
+name: Feature Request
+description: 新しい機能を提案する
+title: "[Feature] "
+labels: ["feature"]
+projects: ["niyu07/dev-journey-web/1"]
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 追加したい機能を簡単に説明してください
+
+  - type: textarea
+    id: details
+    attributes:
+      label: 詳細
+      description: 実装方法や背景をできるだけ詳しく書いてください
+
+  - type: checkboxes
+    id: parent-issue
+    attributes:
+      label: 親Issueとして扱う
+      options:
+        - label: このIssueは親（Epic）です
+
+  - type: textarea
+    id: children
+    attributes:
+      label: 子Issueのリンク
+      description: 関連する子Issueがあれば `#番号` でリンクを追加してください
+
+  - type: input
+    id: branch
+    attributes:
+      label: ブランチ名（コピー用）
+      description: `git checkout -b` の後に貼り付けてください
+      value: feature/issue-<番号>-短い説明
