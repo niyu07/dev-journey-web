@@ -2,7 +2,6 @@ name: Bug Report
 description: バグを報告する
 title: "[Bug] "
 labels: ["bug"]
-projects: ["niyu07/dev-journey-web/1"]
 
 body:
   - type: textarea

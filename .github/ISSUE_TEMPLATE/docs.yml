@@ -2,7 +2,6 @@ name: Documentation
 description: ドキュメントの追加や修正を提案する
 title: "[Docs] "
 labels: ["docs"]
-projects: ["niyu07/dev-journey-web/1"]
 
 body:
   - type: textarea
