@@ -2,7 +2,6 @@ name: Refactor
 description: コードの整理や改善を提案する
 title: "[Refactor] "
 labels: ["refactor"]
-projects: ["niyu07/dev-journey-web/1"]
 
 body:
   - type: textarea

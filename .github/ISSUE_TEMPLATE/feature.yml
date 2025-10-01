@@ -2,7 +2,6 @@ name: Feature Request
 description: 新しい機能を提案する
 title: "[Feature] "
 labels: ["feature"]
-projects: ["niyu07/dev-journey-web/1"]
 
 body:
   - type: textarea
