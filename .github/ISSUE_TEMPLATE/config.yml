@@ -1,1 +1,16 @@
 blank_issues_enabled: false
+
+# Issue作成時のテンプレート設定
+defaults:
+  - template: "feature.yml"
+    name: "新機能"
+    about: "新機能を提案する"
+  - template: "bug.yml"
+    name: "バグ報告"
+    about: "バグを報告する"
+  - template: "refactor.yml"
+    name: "リファクタリング"
+    about: "コードをリファクタリングする
+  - template: "docs.yml"
+    name: "ドキュメント修正"
+    about: "ドキュメントを修正する"
