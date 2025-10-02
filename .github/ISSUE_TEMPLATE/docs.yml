@@ -1,5 +1,5 @@
-name: Documentation
-description: ドキュメントの追加や修正を提案する
+name: "Documentation"
+description: "ドキュメントの追加や修正を提案する"
 title: "[Docs] "
 labels: ["docs"]
 
@@ -7,31 +7,31 @@ body:
   - type: textarea
     id: summary
     attributes:
-      label: 概要
-      description: 修正や追加するドキュメントの内容を説明してください
+      label: "概要"
+      description: "修正や追加するドキュメントの内容を説明してください"
 
   - type: textarea
     id: details
     attributes:
-      label: 詳細
-      description: どのファイルを修正/追加するか、具体的に書いてください
+      label: "詳細"
+      description: "どのファイルを修正/追加するか、具体的に書いてください"
 
   - type: checkboxes
     id: parent-issue
     attributes:
-      label: 親Issueとして扱う
+      label: "親Issueとして扱う"
       options:
-        - label: このIssueは親（Epic）です
+        - label: "このIssueは親（Epic）です"
 
   - type: textarea
     id: children
     attributes:
-      label: 子Issueのリンク
-      description: 関連する子Issueがあれば `#番号` でリンクを追加してください
+      label: "子Issueのリンク"
+      description: "関連する子Issueがあれば `#番号` でリンクを追加してください"
 
   - type: input
     id: branch
     attributes:
-      label: ブランチ名（コピー用）
-      description: `git checkout -b` の後に貼り付けてください
-      value: docs/issue-<番号>-短い説明
+      label: "ブランチ名（コピー用）"
+      description: "`git checkout -b` の後に貼り付けてください"
+      value: "docs/issue-<番号>-短い説明"
