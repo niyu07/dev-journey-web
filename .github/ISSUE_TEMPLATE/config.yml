@@ -10,7 +10,7 @@ defaults:
     about: "バグを報告する"
   - template: "refactor.yml"
     name: "リファクタリング"
-    about: "コードをリファクタリングする
+    about: "コードをリファクタリングする"
   - template: "docs.yml"
     name: "ドキュメント修正"
     about: "ドキュメントを修正する"
