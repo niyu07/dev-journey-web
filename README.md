@@ -38,8 +38,7 @@ dev-journey-web は、フロントエンドとバックエンドで構成され�
 cd frontend
 npm install
 # テスト・フォーマット用パッケージも追加でインストールしてください
-npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom
-npm install --save-dev prettier
+npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom prettier
 ```
 
 3. 開発サーバー起動
@@ -73,8 +72,8 @@ source venv/bin/activate  # Windowsの場合は `venv\Scripts\activate`
 
 ```sh
 # アプリ・テスト・フォーマット用パッケージをまとめてインストールしてください
-pip install -r requirements.txt
-pip install black flake8 autopep8
+# 開発用ツール（black, flake8, autopep8 など）もまとめてインストールするため，requirements-dev.txt を使ってください
+pip install -r requirements-dev.txt
 ```
 
 4. サーバー起動
