@@ -34,11 +34,11 @@ todos: List[Todo] = []
 next_id = 1
 
 
-@app.post("/todos/", response_model=List[Todo])
+@app.post("/todos/", response_model=Todo)
 def create_todo(data: TodoCreate):
     global next_id
 
-    if data.title.strip() == "":
+    if not data.title or data.title.strip() == "":
         raise HTTPException(status_code=400, detail="Title cannot be empty")
 
     # todoオブジェクトの作成
@@ -53,4 +53,4 @@ def create_todo(data: TodoCreate):
 
     next_id += 1
 
-    return todos
+    return new_todo
