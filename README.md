@@ -176,7 +176,7 @@ uvicorn app.main:app --reload
 - Visual Studio Code（VS Code）
   - ESLint 拡張
   - Prettier 拡張
-    - Japanese Language Pack for Visual Studio Code：日本 g の語化
+    - Japanese Language Pack for Visual Studio Code：日本語化
     - Live Preview：HTML のライブプレビュー
 
 ## プロジェクト構成（主要ディレクトリ）
