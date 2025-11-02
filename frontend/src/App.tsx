@@ -1,5 +1,6 @@
 import { Clock } from './features/Clock/Clock';
 import { Weather } from './features/Weather/Weather';
+import { MorningRoutine } from './features/MorningRoutine/MorningRoutine';
 import './App.css';
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
     <div className="container">
       <Clock />
       <Weather />
+      <MorningRoutine />
     </div>
   );
 }
