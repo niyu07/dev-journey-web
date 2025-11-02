@@ -1,7 +1,9 @@
 fastapi
 httpx
 python-dotenv
-
 uvicorn[standard]
-python-dotenv
 pytest
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+itsdangerous
