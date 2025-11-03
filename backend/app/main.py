@@ -16,6 +16,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import httpx
 from pydantic import BaseModel
+import google.generativeai as genai
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,6 +27,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY")
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET_KEY]):
     raise ValueError("Google OAuth environment variables are not set. Please check your .env file.")
@@ -34,6 +36,12 @@ if not all([NOTION_API_KEY, NOTION_DATABASE_ID]):
     print("Notion environment variables (NOTION_API_KEY, NOTION_DATABASE_ID) are not fully set. Notion integration will be disabled.")
     NOTION_API_KEY = None
     NOTION_DATABASE_ID = None
+
+if not GEMINI_API_KEY:
+    print("GEMINI_API_KEY is not set. Gemini integration will be disabled.")
+    GEMINI_API_KEY = None
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 # --- FastAPI App Initialization ---
 app = FastAPI()
@@ -315,3 +323,185 @@ async def delete_task(task_id: str):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting Notion task.")
+
+# --- Study Log Endpoints ---
+
+STUDY_LOG_DATABASE_ID = os.getenv("STUDY_LOG_DATABASE_ID")
+
+if not STUDY_LOG_DATABASE_ID:
+    print("STUDY_LOG_DATABASE_ID is not set. Study log integration will be disabled.")
+
+class CreateStudyLogRequest(BaseModel):
+    title: str
+    study_time: int
+    date: str
+    details: Optional[str] = None
+
+@app.post("/api/studylog")
+async def create_study_log(request_body: CreateStudyLogRequest):
+    if not NOTION_API_KEY or not STUDY_LOG_DATABASE_ID:
+        raise HTTPException(status_code=500, detail="Study log integration is not configured.")
+
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+
+    url = "https://api.notion.com/v1/pages"
+
+    properties = {
+        "内容": {
+            "title": [
+                {
+                    "text": {
+                        "content": request_body.title
+                    }
+                }
+            ]
+        },
+        "学習時間": {
+            "number": request_body.study_time
+        },
+        "日付": {
+            "date": {
+                "start": request_body.date
+            }
+        },
+    }
+
+    if request_body.details:
+        properties["詳細"] = {"rich_text": [{"text": {"content": request_body.details}}]}
+
+    payload = {
+        "parent": { "database_id": STUDY_LOG_DATABASE_ID },
+        "properties": properties
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        print(f"Error creating study log: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to create study log: {e.response.text}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while creating study log.")
+
+@app.get("/api/studylog")
+async def get_study_logs(date: str):
+    if not NOTION_API_KEY or not STUDY_LOG_DATABASE_ID:
+        raise HTTPException(status_code=500, detail="Study log integration is not configured.")
+
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+
+    url = f"https://api.notion.com/v1/databases/{STUDY_LOG_DATABASE_ID}/query"
+
+    # Filter by date
+    filter_payload = {
+        "filter": {
+            "property": "日付",
+            "date": {
+                "equals": date
+            }
+        }
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, json=filter_payload)
+            response.raise_for_status()
+            data = response.json()
+
+        results = data.get("results")
+        study_logs = []
+        for page in results:
+            properties = page.get("properties", {})
+            title_property = properties.get("内容", {}).get("title")
+            study_time_property = properties.get("学習時間", {}).get("number")
+            date_property = properties.get("日付", {}).get("date")
+            details_property = properties.get("詳細", {}).get("rich_text")
+
+            title = title_property[0].get("plain_text") if title_property and title_property[0] else None
+            study_time = study_time_property if study_time_property is not None else None
+            log_date = date_property.get("start") if date_property else None
+            details = details_property[0].get("plain_text") if details_property and details_property[0] else None
+
+            study_logs.append({
+                "id": page["id"],
+                "title": title,
+                "study_time": study_time,
+                "date": log_date,
+                "details": details
+            })
+        return study_logs
+
+    except httpx.HTTPStatusError as e:
+        print(f"Error fetching study logs: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to fetch study logs: {e.response.text}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while fetching study logs.")
+
+class SummarizeStudyLogRequest(BaseModel):
+    study_logs: list[dict]
+
+@app.post("/api/studylog/summarize")
+async def summarize_study_log(request_body: SummarizeStudyLogRequest):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Gemini integration is not configured.")
+
+    if not request_body.study_logs:
+        return {"summary": "No study logs provided for summarization.", "model": "gemini-pro"}
+
+    prompt_parts = [
+        "以下の学習記録を要約し、今日一日の振り返りとして簡潔にまとめてください。",
+        "各学習内容と学習時間を考慮し、特に重要な点や進捗を強調してください。",
+        "---学習記録---"
+    ]
+
+    for log in request_body.study_logs:
+        prompt_parts.append(f"- 学習内容: {log.get("title", "不明")}, 学習時間: {log.get("study_time", 0)}分, 詳細: {log.get("details", "なし")}")
+    
+    prompt_parts.append("---要約---")
+
+    try:
+        model = genai.GenerativeModel('gemini-pro-latest')
+        response = model.generate_content("\n".join(prompt_parts))
+        return {"summary": response.text, "model": "gemini-pro-latest"}
+    except Exception as e:
+        print(f"Error summarizing study logs with Gemini API: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to summarize study logs: {e}")
+
+@app.delete("/api/studylog/{log_id}")
+async def delete_study_log(log_id: str):
+    if not NOTION_API_KEY:
+        raise HTTPException(status_code=500, detail="Notion integration is not configured.")
+
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+
+    url = f"https://api.notion.com/v1/pages/{log_id}"
+
+    payload = {"archived": True}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.patch(url, headers=headers, json=payload)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        print(f"Error deleting study log: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to delete study log: {e.response.text}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting study log.")

@@ -1,0 +1,168 @@
+.study-log-container {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px solid #e8e8e8;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.study-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.study-log-header h2 {
+  margin: 0;
+}
+
+.date-selector {
+  display: flex;
+  align-items: center;
+}
+
+.date-selector button {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  color: #333;
+  padding: 8px 12px;
+  margin: 0 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.date-selector button:hover {
+  background-color: #e0e0e0;
+}
+
+.date-selector span {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.study-log-body {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+.add-log-form .form-group {
+  margin-bottom: 15px;
+}
+
+.add-log-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.add-log-form input[type="text"],
+.add-log-form input[type="number"],
+.add-log-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+.add-log-form button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  width: 100%;
+}
+
+.study-log-display-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.study-log-item {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.study-log-item input[type="checkbox"] {
+  margin-top: 5px;
+  margin-right: 12px;
+}
+
+.log-content {
+  flex-grow: 1;
+}
+
+.log-content h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.log-content p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.delete-log-btn {
+  background-color: #e53e3e;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+  margin-left: 10px;
+}
+
+.study-log-display-section button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 15px;
+}
+
+.summary-output {
+  background-color: #f0f8ff;
+  border: 1px solid #b0e0e6;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+  white-space: pre-wrap; /* To respect newlines from Gemini */
+}
+
+.summary-output h3 {
+  color: #0056b3;
+  margin-top: 0;
+}
+
+.error-message {
+  color: #e53e3e;
+  background-color: #fff5f5;
+  border: 1px solid #e53e3e;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}

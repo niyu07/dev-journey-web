@@ -4,6 +4,7 @@ import { MorningRoutine } from './features/MorningRoutine/MorningRoutine';
 import { GoogleCalendar } from './features/GoogleCalendar/GoogleCalendar';
 import { PomodoroTimer } from './features/PomodoroTimer/PomodoroTimer';
 import NotionTasks from './features/NotionTasks/NotionTasks';
+import StudyLog from './features/StudyLog/StudyLog';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
       <GoogleCalendar />
       <PomodoroTimer />
       <NotionTasks />
+      <StudyLog />
     </div>
   );
 }
