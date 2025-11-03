@@ -2,6 +2,7 @@ import { Clock } from './features/Clock/Clock';
 import { Weather } from './features/Weather/Weather';
 import { MorningRoutine } from './features/MorningRoutine/MorningRoutine';
 import { GoogleCalendar } from './features/GoogleCalendar/GoogleCalendar';
+import { PomodoroTimer } from './features/PomodoroTimer/PomodoroTimer';
 import './App.css';
 
 function App() {
@@ -11,9 +12,9 @@ function App() {
       <Weather />
       <MorningRoutine />
       <GoogleCalendar />
+      <PomodoroTimer />
     </div>
   );
 }
 
 export default App;
-
