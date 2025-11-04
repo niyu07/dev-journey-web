@@ -5,9 +5,34 @@ import { GoogleCalendar } from './features/GoogleCalendar/GoogleCalendar';
 import { PomodoroTimer } from './features/PomodoroTimer/PomodoroTimer';
 import NotionTasks from './features/NotionTasks/NotionTasks';
 import StudyLog from './features/StudyLog/StudyLog';
+import WorkTimeTracker from './features/WorkTimeTracker/WorkTimeTracker';
 import './App.css';
 
 function App() {
+  const handleLogSubmit = async (title: string, minutes: number, details: string) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/studylog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          study_time: minutes,
+          date: new Date().toISOString().split('T')[0],
+          details,
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to add study log');
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
   return (
     <div className="container">
       <Clock />
@@ -17,6 +42,7 @@ function App() {
       <PomodoroTimer />
       <NotionTasks />
       <StudyLog />
+      <WorkTimeTracker onLogSubmit={handleLogSubmit} />
     </div>
   );
 }

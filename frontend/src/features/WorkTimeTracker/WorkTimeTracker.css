@@ -1,0 +1,71 @@
+.work-time-tracker-container {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.work-time-tracker-container h2 {
+  margin-top: 0;
+  text-align: center;
+  color: #333;
+}
+
+.tracker-time-display {
+  font-size: 3em;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.tracker-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.tracker-title-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.tracker-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  color: white;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.tracker-button.start {
+  background-color: #28a745;
+}
+
+.tracker-button.stop {
+  background-color: #dc3545;
+}
+
+.tracker-button.reset {
+  background-color: #6c757d;
+}
+
+.tracker-button.save {
+  background-color: #007bff;
+}
+
+.tracker-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
