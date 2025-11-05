@@ -184,7 +184,9 @@ async def get_notion_tasks():
                     date = date_property.get("start") if date_property else None
                     type_property = properties.get("種類", {}).get("select", {})
                     task_type = type_property.get("name") if type_property else None
-                    tasks.append({"id": page["id"], "title": title, "status": status, "date": date, "type": task_type})
+                    project_property = properties.get("プロジェクト", {}).get("select", {})
+                    project = project_property.get("name") if project_property else None
+                    tasks.append({"id": page["id"], "title": title, "status": status, "date": date, "type": task_type, "project": project})
         return tasks
 
     except httpx.HTTPStatusError as e:
@@ -245,6 +247,7 @@ class CreateTaskRequest(BaseModel):
     status: str
     task_type: str
     date: str
+    project: Optional[str] = None
 
 @app.post("/api/notion/tasks")
 async def create_task(request_body: CreateTaskRequest):
@@ -259,34 +262,39 @@ async def create_task(request_body: CreateTaskRequest):
 
     url = "https://api.notion.com/v1/pages"
 
-    payload = {
-        "parent": { "database_id": NOTION_DATABASE_ID },
-        "properties": {
-            "名前": {
-                "title": [
-                    {
-                        "text": {
-                            "content": request_body.title
-                        }
+    properties = {
+        "名前": {
+            "title": [
+                {
+                    "text": {
+                        "content": request_body.title
                     }
-                ]
-            },
-            "Status": {
-                "status": {
-                    "name": request_body.status
                 }
-            },
-            "種類": {
-                "select": {
-                    "name": request_body.task_type
-                }
-            },
-            "日付": {
-                "date": {
-                    "start": request_body.date
-                }
+            ]
+        },
+        "Status": {
+            "status": {
+                "name": request_body.status
+            }
+        },
+        "種類": {
+            "select": {
+                "name": request_body.task_type
+            }
+        },
+        "日付": {
+            "date": {
+                "start": request_body.date
             }
         }
+    }
+
+    if request_body.project:
+        properties["プロジェクト"] = {"select": {"name": request_body.project}}
+
+    payload = {
+        "parent": { "database_id": NOTION_DATABASE_ID },
+        "properties": properties
     }
 
     try:

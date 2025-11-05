@@ -1,25 +1,20 @@
 import React, { useState } from 'react';
 
-interface NotionTask {
-  id: string;
-  title: string;
-  status: string | null;
-  date: string | null;
-  type: string | null;
-}
-
 interface AddTaskModalProps {
   onClose: () => void;
   onTaskAdded: () => void;
   taskTypes: string[];
+  projectOptions: string[];
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onTaskAdded, taskTypes }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onTaskAdded, taskTypes, projectOptions }) => {
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('未着手');
   const [selectedType, setSelectedType] = useState('');
   const [newType, setNewType] = useState('');
   const [date, setDate] = useState('');
+  const [selectedProject, setSelectedProject] = useState('');
+  const [newProject, setNewProject] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,13 +27,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onTaskAdded, taskT
       return;
     }
 
+    const project = selectedProject === '__new__' ? newProject : selectedProject;
+
     try {
       const response = await fetch('http://localhost:8000/api/notion/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, status, task_type: taskType, date }),
+        body: JSON.stringify({ title, status, task_type: taskType, date, project }),
       });
 
       if (!response.ok) {
@@ -90,6 +87,25 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onTaskAdded, taskT
                 value={newType} 
                 onChange={(e) => setNewType(e.target.value)} 
                 placeholder="Enter new type name" 
+                required 
+              />
+            )}
+          </div>
+          <div className="form-group">
+            <label>Project</label>
+            <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
+              <option value="">No Project</option>
+              {projectOptions.map(proj => (
+                <option key={proj} value={proj}>{proj}</option>
+              ))}
+              <option value="__new__">Create new project...</option>
+            </select>
+            {selectedProject === '__new__' && (
+              <input 
+                type="text" 
+                value={newProject} 
+                onChange={(e) => setNewProject(e.target.value)} 
+                placeholder="Enter new project name" 
                 required 
               />
             )}

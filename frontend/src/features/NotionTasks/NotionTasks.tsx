@@ -3,6 +3,7 @@ import './NotionTasks.css';
 import AddTaskModal from './AddTaskModal';
 import EditTaskModal from './EditTaskModal';
 import './AddTaskModal.css';
+import TaskProgressBar from '../TaskProgressBar/TaskProgressBar';
 
 export interface NotionTask {
   id: string;
@@ -10,12 +11,14 @@ export interface NotionTask {
   status: string | null;
   date: string | null;
   type: string | null;
+  project: string | null;
 }
 
 const NotionTasks: React.FC = () => {
   const [tasks, setTasks] = useState<NotionTask[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedProject, setSelectedProject] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<NotionTask | null>(null);
@@ -90,21 +93,36 @@ const NotionTasks: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
+  const { dailyTasks, monthlyTasks, projectTasks, projectOptions } = useMemo(() => {
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+
+    const daily = tasks.filter(task => task.date === todayString);
+    const monthly = tasks.filter(task => {
+      if (!task.date) return false;
+      const taskDate = new Date(task.date);
+      return taskDate.getFullYear() === selectedDate.getFullYear() && taskDate.getMonth() === selectedDate.getMonth();
+    });
+
+    const projects = Array.from(new Set(tasks.map(task => task.project).filter(Boolean))) as string[];
+    
+    const project = selectedProject === 'all' 
+      ? [] 
+      : tasks.filter(task => task.project === selectedProject);
+
+    return { dailyTasks: daily, monthlyTasks: monthly, projectTasks: project, projectOptions: projects };
+  }, [tasks, selectedDate, selectedProject]);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      if (task.status === '完了') {
-        return false;
-      }
-      if (!task.date) {
-        return false;
-      }
+      if (task.status === '完了') return false;
+      if (!task.date) return false;
       const taskDate = new Date(task.date);
-      return (
-        taskDate.getFullYear() === selectedDate.getFullYear() &&
-        taskDate.getMonth() === selectedDate.getMonth()
-      );
+      const isInMonth = taskDate.getFullYear() === selectedDate.getFullYear() && taskDate.getMonth() === selectedDate.getMonth();
+      const isinProject = selectedProject === 'all' || task.project === selectedProject;
+      return isInMonth && isinProject;
     });
-  }, [tasks, selectedDate]);
+  }, [tasks, selectedDate, selectedProject]);
 
   const groupedTasks = useMemo(() => {
     return filteredTasks.reduce((acc, task) => {
@@ -145,6 +163,21 @@ const NotionTasks: React.FC = () => {
         </div>
         <button onClick={() => setIsAddModalOpen(true)} className="add-task-btn">Add Task</button>
       </div>
+
+      <div className="progress-section">
+        <TaskProgressBar title="Today's Progress" tasks={dailyTasks} />
+        <TaskProgressBar title="This Month's Progress" tasks={monthlyTasks} />
+        {projectOptions.length > 0 && (
+          <div>
+            <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="project-filter">
+              <option value="all">All Projects</option>
+              {projectOptions.map(proj => <option key={proj} value={proj}>{proj}</option>)}
+            </select>
+            {selectedProject !== 'all' && <TaskProgressBar title={`${selectedProject} Progress`} tasks={projectTasks} />}
+          </div>
+        )}
+      </div>
+
       <div className="task-columns">
         {Object.entries(groupedTasks).map(([type, tasksInGroup]) => (
           <div key={type} className="task-column">
@@ -172,7 +205,7 @@ const NotionTasks: React.FC = () => {
           </div>
         ))}
       </div>
-      {isAddModalOpen && <AddTaskModal onClose={() => setIsAddModalOpen(false)} onTaskAdded={fetchTasks} taskTypes={uniqueTaskTypes} />}
+      {isAddModalOpen && <AddTaskModal onClose={() => setIsAddModalOpen(false)} onTaskAdded={fetchTasks} taskTypes={uniqueTaskTypes} projectOptions={projectOptions} />}
       {isEditModalOpen && editingTask && <EditTaskModal task={editingTask} onClose={() => setIsEditModalOpen(false)} onTaskUpdated={fetchTasks} taskTypes={uniqueTaskTypes} />}
     </div>
   );
