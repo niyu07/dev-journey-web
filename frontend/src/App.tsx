@@ -6,6 +6,7 @@ import { PomodoroTimer } from './features/PomodoroTimer/PomodoroTimer';
 import NotionTasks from './features/NotionTasks/NotionTasks';
 import StudyLog from './features/StudyLog/StudyLog';
 import WorkTimeTracker from './features/WorkTimeTracker/WorkTimeTracker';
+import Accounting from './features/Accounting/Accounting';
 import './App.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
       <NotionTasks />
       <StudyLog />
       <WorkTimeTracker onLogSubmit={handleLogSubmit} />
+      <Accounting />
     </div>
   );
 }

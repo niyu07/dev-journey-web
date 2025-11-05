@@ -9,3 +9,5 @@ google-auth-oauthlib
 itsdangerous
 notion-client
 google-generativeai
+Pillow
+python-multipart

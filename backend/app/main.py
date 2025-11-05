@@ -5,10 +5,13 @@ from dotenv import load_dotenv
 # This environment variable allows OAuth2 to work with HTTP. Required for local development.
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, File, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+
+import PIL.Image
+import io
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -17,6 +20,7 @@ from googleapiclient.errors import HttpError
 import httpx
 from pydantic import BaseModel
 import google.generativeai as genai
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -480,28 +484,1061 @@ async def summarize_study_log(request_body: SummarizeStudyLogRequest):
         raise HTTPException(status_code=500, detail=f"Failed to summarize study logs: {e}")
 
 @app.delete("/api/studylog/{log_id}")
+
 async def delete_study_log(log_id: str):
+
     if not NOTION_API_KEY:
+
         raise HTTPException(status_code=500, detail="Notion integration is not configured.")
 
+
+
     headers = {
+
         "Authorization": f"Bearer {NOTION_API_KEY}",
+
         "Content-Type": "application/json",
+
         "Notion-Version": "2022-06-28",
+
     }
+
+
 
     url = f"https://api.notion.com/v1/pages/{log_id}"
 
+
+
     payload = {"archived": True}
 
+
+
     try:
+
         async with httpx.AsyncClient() as client:
+
             response = await client.patch(url, headers=headers, json=payload)
+
             response.raise_for_status()
+
             return response.json()
+
     except httpx.HTTPStatusError as e:
+
         print(f"Error deleting study log: {e.response.text}")
+
         raise HTTPException(status_code=e.response.status_code, detail=f"Failed to delete study log: {e.response.text}")
+
     except Exception as e:
+
         print(f"An unexpected error occurred: {e}")
+
         raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting study log.")
+
+
+
+# --- Accounting Endpoints ---
+
+
+
+NOTION_ACCOUNTING_DATABASE_ID = os.getenv("NOTION_ACCOUNTING_DATABASE_ID")
+
+
+
+if not NOTION_ACCOUNTING_DATABASE_ID:
+
+
+
+    print("NOTION_ACCOUNTING_DATABASE_ID is not set. Accounting integration will be disabled.")
+
+
+
+
+
+
+
+CATEGORIES_FILE = os.path.join(os.path.dirname(__file__), "categories.json")
+
+
+
+
+
+
+
+class AddCategoryRequest(BaseModel):
+
+
+
+    category: str
+
+
+
+
+
+
+
+@app.get("/api/accounting/categories")
+
+
+
+def get_categories():
+
+
+
+    try:
+
+
+
+        with open(CATEGORIES_FILE, "r") as f:
+
+
+
+            categories = json.load(f)
+
+
+
+        return categories
+
+
+
+    except FileNotFoundError:
+
+
+
+        return []
+
+
+
+
+
+
+
+@app.post("/api/accounting/categories")
+
+
+
+async def add_category(request_body: AddCategoryRequest):
+
+
+
+    try:
+
+
+
+        with open(CATEGORIES_FILE, "r+") as f:
+
+
+
+            categories = json.load(f)
+
+
+
+            new_category = request_body.category
+
+
+
+            if new_category not in categories:
+
+
+
+                categories.append(new_category)
+
+
+
+                f.seek(0)
+
+
+
+                json.dump(categories, f, ensure_ascii=False, indent=2)
+
+
+
+                f.truncate()
+
+
+
+        return {"message": "Category added successfully"}
+
+
+
+    except FileNotFoundError:
+
+
+
+        with open(CATEGORIES_FILE, "w") as f:
+
+
+
+            json.dump([request_body.category], f, ensure_ascii=False, indent=2)
+
+
+
+        return {"message": "Category added successfully"}
+
+
+
+
+
+
+
+class AccountingEntry(BaseModel):
+
+
+
+    id: str
+
+
+
+    date: str
+
+
+
+    entry_type: str
+
+
+
+    amount: float
+
+
+
+    category: str
+
+
+
+    description: str
+
+
+
+    classification: str
+
+
+
+
+
+
+
+class CreateAccountingEntryRequest(BaseModel):
+
+
+
+    date: str
+
+
+
+    entry_type: str
+
+
+
+    amount: float
+
+
+
+    category: str
+
+
+
+    description: str
+
+
+
+    classification: str
+
+
+
+
+
+
+
+@app.post("/api/accounting")
+
+
+
+async def create_accounting_entry(request_body: CreateAccountingEntryRequest):
+
+
+
+    if not NOTION_API_KEY or not NOTION_ACCOUNTING_DATABASE_ID:
+
+
+
+        raise HTTPException(status_code=500, detail="Accounting integration is not configured.")
+
+
+
+
+
+
+
+    headers = {
+
+
+
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+
+
+
+        "Content-Type": "application/json",
+
+
+
+        "Notion-Version": "2022-06-28",
+
+
+
+    }
+
+
+
+
+
+
+
+    url = "https://api.notion.com/v1/pages"
+
+
+
+
+
+
+
+    properties = {
+
+
+
+        "日付": {"date": {"start": request_body.date}},
+
+
+
+        "種類": {"select": {"name": request_body.entry_type}},
+
+
+
+        "金額": {"number": request_body.amount},
+
+
+
+        "カテゴリ": {"select": {"name": request_body.category}},
+
+
+
+        "内容": {"title": [{"text": {"content": request_body.description}}]}, 
+
+
+
+        "区分": {"select": {"name": request_body.classification}}
+
+
+
+    }
+
+
+
+
+
+
+
+    payload = {
+
+
+
+        "parent": {"database_id": NOTION_ACCOUNTING_DATABASE_ID},
+
+
+
+        "properties": properties
+
+
+
+    }
+
+
+
+
+
+
+
+    try:
+
+
+
+        async with httpx.AsyncClient() as client:
+
+
+
+            response = await client.post(url, headers=headers, json=payload)
+
+
+
+            response.raise_for_status()
+
+
+
+            return response.json()
+
+
+
+    except httpx.HTTPStatusError as e:
+
+
+
+        print(f"Error creating accounting entry: {e.response.text}")
+
+
+
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to create accounting entry: {e.response.text}")
+
+
+
+    except Exception as e:
+
+
+
+        print(f"An unexpected error occurred: {e}")
+
+
+
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while creating accounting entry.")
+
+
+
+
+
+
+
+@app.get("/api/accounting")
+
+
+
+async def get_accounting_entries(start_date: Optional[str] = None, end_date: Optional[str] = None):
+
+
+
+    if not NOTION_API_KEY or not NOTION_ACCOUNTING_DATABASE_ID:
+
+
+
+        raise HTTPException(status_code=500, detail="Accounting integration is not configured.")
+
+
+
+
+
+
+
+    headers = {
+
+
+
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+
+
+
+        "Content-Type": "application/json",
+
+
+
+        "Notion-Version": "2022-06-28",
+
+
+
+    }
+
+
+
+
+
+
+
+    url = f"https://api.notion.com/v1/databases/{NOTION_ACCOUNTING_DATABASE_ID}/query"
+
+
+
+
+
+
+
+    filter_payload = {"filter": {"and": []}}
+
+
+
+    if start_date:
+
+
+
+        filter_payload["filter"]["and"].append({"property": "日付", "date": {"on_or_after": start_date}})
+
+
+
+    if end_date:
+
+
+
+        filter_payload["filter"]["and"].append({"property": "日付", "date": {"on_or_before": end_date}})
+
+
+
+
+
+
+
+    try:
+
+
+
+        async with httpx.AsyncClient() as client:
+
+
+
+            response = await client.post(url, headers=headers, json=filter_payload if filter_payload["filter"]["and"] else {})
+
+
+
+            response.raise_for_status()
+
+
+
+            data = response.json()
+
+
+
+
+
+
+
+        results = data.get("results")
+
+
+
+        entries = []
+
+
+
+        for page in results:
+
+
+
+            properties = page.get("properties", {})
+
+
+
+            date_prop = properties.get("日付", {}).get("date", {})
+
+
+
+            entry_type_prop = properties.get("種類", {}).get("select", {})
+
+
+
+            amount_prop = properties.get("金額", {}).get("number")
+
+
+
+            category_prop = properties.get("カテゴリ", {}).get("select", {})
+
+
+
+            description_prop = properties.get("内容", {}).get("title")
+
+
+
+            classification_prop = properties.get("区分", {}).get("select", {})
+
+
+
+
+
+
+
+            entries.append({
+
+
+
+                "id": page["id"],
+
+
+
+                "date": date_prop.get("start") if date_prop else None,
+
+
+
+                "entry_type": entry_type_prop.get("name") if entry_type_prop else None,
+
+
+
+                "amount": amount_prop,
+
+
+
+                "category": category_prop.get("name") if category_prop else None,
+
+
+
+                "description": description_prop[0].get("plain_text") if description_prop and description_prop[0] else None,
+
+
+
+                "classification": classification_prop.get("name") if classification_prop else None,
+
+
+
+            })
+
+
+
+        return entries
+
+
+
+
+
+
+
+    except httpx.HTTPStatusError as e:
+
+
+
+        print(f"Error fetching accounting entries: {e.response.text}")
+
+
+
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to fetch accounting entries: {e.response.text}")
+
+
+
+    except Exception as e:
+
+
+
+        print(f"An unexpected error occurred: {e}")
+
+
+
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while fetching accounting entries.")
+
+
+
+@app.post("/api/accounting/receipt")
+
+
+
+async def process_receipt(file: UploadFile = File(...)):
+
+
+
+    if not GEMINI_API_KEY:
+
+
+
+        raise HTTPException(status_code=500, detail="Gemini integration is not configured.")
+
+
+
+
+
+
+
+    try:
+
+
+
+        # Read image content
+
+
+
+        contents = await file.read()
+
+
+
+        img = PIL.Image.open(io.BytesIO(contents))
+
+
+
+
+
+
+
+        # Send to Gemini
+
+
+
+        model = genai.GenerativeModel('gemini-pro-vision')
+
+
+
+        prompt = """
+
+
+
+        Analyze this receipt image and extract the following information in JSON format:
+
+
+
+        - "date": The date of the transaction (in YYYY-MM-DD format).
+
+
+
+        - "description": The name of the store or a brief description of the purchase.
+
+
+
+        - "amount": The total amount of the transaction as a float.
+
+
+
+
+
+
+
+        If any of this information is not available, set the value to null.
+
+
+
+        """
+
+
+
+        response = model.generate_content([prompt, img])
+
+
+
+
+
+
+
+        # The response from Gemini might be in a markdown block, so we need to clean it up
+
+
+
+        cleaned_text = response.text.strip().replace('```json', '').replace('```', '')
+
+
+
+        
+
+
+
+        return cleaned_text
+
+
+
+
+
+
+
+    except Exception as e:
+
+
+
+        print(f"Error processing receipt: {e}")
+
+
+
+        raise HTTPException(status_code=500, detail=f"Failed to process receipt: {e}")
+
+
+
+
+
+
+
+class UpdateAccountingEntryRequest(BaseModel):
+
+
+
+    date: Optional[str] = None
+
+
+
+    entry_type: Optional[str] = None
+
+
+
+    amount: Optional[float] = None
+
+
+
+    category: Optional[str] = None
+
+
+
+    description: Optional[str] = None
+
+
+
+    classification: Optional[str] = None
+
+
+
+
+
+
+
+@app.patch("/api/accounting/{entry_id}")
+
+
+
+async def update_accounting_entry(entry_id: str, request_body: UpdateAccountingEntryRequest):
+
+
+
+    if not NOTION_API_KEY:
+
+
+
+        raise HTTPException(status_code=500, detail="Accounting integration is not configured.")
+
+
+
+
+
+
+
+    headers = {
+
+
+
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+
+
+
+        "Content-Type": "application/json",
+
+
+
+        "Notion-Version": "2022-06-28",
+
+
+
+    }
+
+
+
+
+
+
+
+    url = f"https://api.notion.com/v1/pages/{entry_id}"
+
+
+
+
+
+
+
+    properties = {}
+
+
+
+    if request_body.date is not None:
+
+
+
+        properties["日付"] = {"date": {"start": request_body.date}}
+
+
+
+    if request_body.entry_type is not None:
+
+
+
+        properties["種類"] = {"select": {"name": request_body.entry_type}}
+
+
+
+    if request_body.amount is not None:
+
+
+
+        properties["金額"] = {"number": request_body.amount}
+
+
+
+    if request_body.category is not None:
+
+
+
+        properties["カテゴリ"] = {"select": {"name": request_body.category}}
+
+
+
+    if request_body.description is not None:
+
+
+
+        properties["内容"] = {"title": [{"text": {"content": request_body.description}}]}
+
+
+
+    if request_body.classification is not None:
+
+
+
+        properties["区分"] = {"select": {"name": request_body.classification}}
+
+
+
+
+
+
+
+    payload = {"properties": properties}
+
+
+
+
+
+
+
+    try:
+
+
+
+        async with httpx.AsyncClient() as client:
+
+
+
+            response = await client.patch(url, headers=headers, json=payload)
+
+
+
+            response.raise_for_status()
+
+
+
+            return response.json()
+
+
+
+    except httpx.HTTPStatusError as e:
+
+
+
+        print(f"Error updating accounting entry: {e.response.text}")
+
+
+
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to update accounting entry: {e.response.text}")
+
+
+
+    except Exception as e:
+
+
+
+        print(f"An unexpected error occurred: {e}")
+
+
+
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while updating accounting entry.")
+
+
+
+
+
+
+
+@app.delete("/api/accounting/{entry_id}")
+
+
+
+async def delete_accounting_entry(entry_id: str):
+
+
+
+    if not NOTION_API_KEY:
+
+
+
+        raise HTTPException(status_code=500, detail="Accounting integration is not configured.")
+
+
+
+
+
+
+
+    headers = {
+
+
+
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+
+
+
+        "Content-Type": "application/json",
+
+
+
+        "Notion-Version": "2022-06-28",
+
+
+
+    }
+
+
+
+
+
+
+
+    url = f"https://api.notion.com/v1/pages/{entry_id}"
+
+
+
+
+
+
+
+    payload = {"archived": True}
+
+
+
+
+
+
+
+    try:
+
+
+
+        async with httpx.AsyncClient() as client:
+
+
+
+            response = await client.patch(url, headers=headers, json=payload)
+
+
+
+            response.raise_for_status()
+
+
+
+            return response.json()
+
+
+
+    except httpx.HTTPStatusError as e:
+
+
+
+        print(f"Error deleting accounting entry: {e.response.text}")
+
+
+
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to delete accounting entry: {e.response.text}")
+
+
+
+    except Exception as e:
+
+
+
+        print(f"An unexpected error occurred: {e}")
+
+
+
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting accounting entry.")
+
+
+
+
