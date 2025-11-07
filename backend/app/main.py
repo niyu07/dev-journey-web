@@ -54,7 +54,7 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "https://ichipol.g.hiroshima-cu.ac.jp"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,7 +70,7 @@ CLIENT_SECRETS_CONFIG = {
         "redirect_uris": ["http://localhost:8000/auth/google/callback"],
     }
 }
-SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.readonly"]
 REDIRECT_URI = "http://localhost:8000/auth/google/callback"
 
 # --- Helper Functions ---
@@ -101,9 +101,16 @@ async def auth_google_callback(request: Request):
         flow = Flow.from_client_config(CLIENT_SECRETS_CONFIG, scopes=SCOPES, redirect_uri=REDIRECT_URI)
         flow.fetch_token(authorization_response=str(request.url))
         credentials = flow.credentials
+
+        # Preserve the refresh token if it already exists in the session
+        existing_credentials = request.session.get('credentials')
+        refresh_token = credentials.refresh_token
+        if not refresh_token and existing_credentials and 'refresh_token' in existing_credentials:
+            refresh_token = existing_credentials['refresh_token']
+
         request.session['credentials'] = {
             'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
+            'refresh_token': refresh_token,
             'token_uri': credentials.token_uri,
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
@@ -123,7 +130,9 @@ def auth_logout(request: Request):
 def get_calendar_events(request: Request, date: str | None = None):
     credentials = get_credentials(request)
     if not credentials or not credentials.valid:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        # If there are no valid credentials, return an empty list.
+        # This prevents the frontend from showing an error if the user is simply not logged in.
+        return []
 
     try:
         service = build('calendar', 'v3', credentials=credentials)
@@ -147,8 +156,99 @@ def get_calendar_events(request: Request, date: str | None = None):
         return [{"summary": event["summary"], "start": event["start"].get("dateTime", event["start"].get("date"))} for event in events]
 
     except HttpError as error:
-        print(f'An error occurred: {error}')
+        print(f'An error occurred fetching Google Calendar events: {error}')
+        # If credentials are stale/invalid, clear them and return empty list.
+        if error.resp.status in [401, 403]:
+            request.session.pop('credentials', None)
+            return []
         raise HTTPException(status_code=500, detail=f"Failed to fetch calendar events: {error}")
+    except Exception as e:
+        print(f'An unexpected error occurred in get_calendar_events: {e}')
+        # For any other error, return an empty list to prevent frontend from breaking.
+        request.session.pop('credentials', None)
+        return []
+
+@app.get("/api/google-calendar/cancellation-candidates")
+def get_cancellation_candidates(request: Request, start_date: str, end_date: str):
+    try:
+        credentials = get_credentials(request)
+        if not credentials or not credentials.valid:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+
+        service = build('calendar', 'v3', credentials=credentials)
+
+        time_min = f"{start_date}T00:00:00Z"
+        time_max = f"{end_date}T23:59:59Z"
+
+        # 1. Fetch Japanese holidays
+        holiday_calendar_id = 'ja.japanese#holiday@group.v.calendar.google.com'
+        holidays_result = service.events().list(
+            calendarId=holiday_calendar_id,
+            timeMin=time_min,
+            timeMax=time_max,
+            singleEvents=True
+        ).execute()
+        holiday_events = holidays_result.get('items', [])
+        # Create a dictionary mapping date to holiday name
+        holiday_map = {event['start']['date']: event['summary'] for event in holiday_events}
+
+        # 2. Fetch user's primary calendar events
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=time_min,
+            timeMax=time_max,
+            singleEvents=True
+        ).execute()
+        user_events = events_result.get('items', [])
+
+        # 3. Find cancellation candidates (recurring events on holidays)
+        candidates = []
+        for event in user_events:
+            event_date_str = event['start'].get('date') or event['start'].get('dateTime', '').split('T')[0]
+            if event_date_str in holiday_map and 'recurringEventId' in event:
+                candidates.append({
+                    'id': event['id'],
+                    'summary': event['summary'],
+                    'date': event_date_str,
+                    'holiday_name': holiday_map[event_date_str]
+                })
+        
+        # Sort candidates by date
+        candidates.sort(key=lambda x: x['date'])
+        return candidates
+
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+        raise HTTPException(status_code=500, detail=f"Failed to find cancellation candidates: {error}")
+    except Exception as e:
+        print(f"An unexpected error occurred in get_cancellation_candidates: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected server error occurred: {e}")
+
+class BatchDeleteRequest(BaseModel):
+    event_ids: list[str]
+
+@app.post("/api/google-calendar/batch-delete-events")
+def batch_delete_events(request: Request, body: BatchDeleteRequest):
+    credentials = get_credentials(request)
+    if not credentials or not credentials.valid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        service = build('calendar', 'v3', credentials=credentials)
+        deleted_count = 0
+        for event_id in body.event_ids:
+            try:
+                service.events().delete(calendarId='primary', eventId=event_id).execute()
+                deleted_count += 1
+            except HttpError as e:
+                # Log error for a single event deletion failure but continue with others
+                print(f"Could not delete event {event_id}: {e}")
+        
+        return {"message": f"Successfully deleted {deleted_count} out of {len(body.event_ids)} events."}
+
+    except HttpError as error:
+        print(f'An error occurred during batch delete: {error}')
+        raise HTTPException(status_code=500, detail=f"Failed to delete events: {error}")
 
 @app.get("/api/notion/tasks")
 async def get_notion_tasks():
@@ -542,6 +642,93 @@ async def delete_study_log(log_id: str):
         print(f"An unexpected error occurred: {e}")
 
         raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting study log.")
+
+
+# --- Unipaa Assignments Synchronization ---
+
+class UnipaaAssignment(BaseModel):
+    subject: str
+    task: str
+    deadline: str
+
+class UnipaaAssignmentsRequest(BaseModel):
+    assignments: list[UnipaaAssignment]
+
+@app.post("/api/unipaa-assignments")
+async def receive_unipaa_assignments(request_body: UnipaaAssignmentsRequest):
+    """
+    Receives assignments from the Unipaa scraper and synchronizes them with Notion.
+    - Creates new tasks in Notion for new assignments.
+    - Marks tasks in Notion as 'Done' if the assignment is no longer in Unipaa.
+    """
+    if not NOTION_API_KEY or not NOTION_DATABASE_ID:
+        raise HTTPException(status_code=500, detail="Notion integration is not configured.")
+
+    # 1. Get the new list of assignments from the scraper
+    unipaa_tasks = request_body.assignments
+    # Create a set of unique keys for easy lookup. Key: "Task Title|YYYY-MM-DD"
+    unipaa_task_keys = {f"{task.task}|{task.deadline.replace('/', '-')}" for task in unipaa_tasks}
+
+    # 2. Get existing Unipaa-related tasks from Notion
+    try:
+        all_notion_tasks = await get_notion_tasks()
+    except Exception as e:
+        # Allow continuing even if fetching fails, though sync will be incomplete
+        print(f"Warning: Failed to fetch Notion tasks, skipping sync. Error: {e}")
+        return {"message": "Sync skipped: could not fetch Notion tasks."}
+
+    notion_unipaa_tasks = [task for task in all_notion_tasks if task.get("project") == "Unipaa"]
+    
+    # 3. Find tasks to mark as complete
+    tasks_to_complete = []
+    for notion_task in notion_unipaa_tasks:
+        # Don't try to complete tasks that are already done or have no title/date
+        if not notion_task.get("title") or not notion_task.get("date") or notion_task.get("status") == "Done":
+            continue
+        
+        notion_key = f"{notion_task['title']}|{notion_task['date']}"
+        if notion_key not in unipaa_task_keys:
+            tasks_to_complete.append(notion_task["id"])
+
+    # 4. Find tasks to create
+    tasks_to_create = []
+    existing_notion_keys = {f"{task['title']}|{task['date']}" for task in notion_unipaa_tasks}
+    for unipaa_task in unipaa_tasks:
+        # Convert deadline format from YYYY/MM/DD to YYYY-MM-DD
+        formatted_deadline = unipaa_task.deadline.replace('/', '-')
+        unipaa_key = f"{unipaa_task.task}|{formatted_deadline}"
+        if unipaa_key not in existing_notion_keys:
+            tasks_to_create.append(unipaa_task)
+
+    # 5. Perform the updates in Notion
+    completed_count = 0
+    for task_id in tasks_to_complete:
+        try:
+            await update_task(task_id, UpdateTaskRequest(status="Done"))
+            completed_count += 1
+        except Exception as e:
+            print(f"Error completing Notion task {task_id}: {e}")
+
+    created_count = 0
+    for task_to_create in tasks_to_create:
+        try:
+            formatted_deadline = task_to_create.deadline.replace('/', '-')
+            await create_task(CreateTaskRequest(
+                title=task_to_create.task,
+                status="未着手",
+                task_type="課題",
+                date=formatted_deadline,
+                project="Unipaa"
+            ))
+            created_count += 1
+        except Exception as e:
+            print(f"Error creating Notion task '{task_to_create.task}': {e}")
+
+    return {
+        "message": "Notion synchronization complete.",
+        "created": created_count,
+        "completed": completed_count
+    }
 
 
 

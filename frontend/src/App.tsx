@@ -2,6 +2,7 @@ import { Clock } from './features/Clock/Clock';
 import { Weather } from './features/Weather/Weather';
 import { MorningRoutine } from './features/MorningRoutine/MorningRoutine';
 import { GoogleCalendar } from './features/GoogleCalendar/GoogleCalendar';
+import HolidayCancellation from './features/HolidayCancellation/HolidayCancellation';
 import { PomodoroTimer } from './features/PomodoroTimer/PomodoroTimer';
 import NotionTasks from './features/NotionTasks/NotionTasks';
 import StudyLog from './features/StudyLog/StudyLog';
@@ -40,6 +41,7 @@ function App() {
       <Weather />
       <MorningRoutine />
       <GoogleCalendar />
+      <HolidayCancellation />
       <PomodoroTimer />
       <NotionTasks />
       <StudyLog />

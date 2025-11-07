@@ -149,3 +149,54 @@
 .error {
   color: #ff6b6b;
 }
+
+.google-calendar-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.holiday-cancellation-container {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.holiday-cancellation-container h4 {
+  margin-top: 0;
+}
+
+.cancellation-message {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.candidates-list {
+  margin-top: 15px;
+}
+
+.candidates-list ul {
+  padding-left: 20px;
+  list-style-type: none; /* Remove bullets to align with checkboxes */
+}
+
+.filter-and-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.filter-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex-grow: 1; /* Allow input to take available space */
+}
+
+.cancel-button {
+  background-color: #e53e3e; /* Red */
+  color: white;
+  margin-top: 10px;
+}
