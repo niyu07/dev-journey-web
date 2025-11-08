@@ -1,0 +1,254 @@
+.notion-tasks-container {
+  background-color: #f3f3f3;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.notion-tasks-container h2 {
+  margin-top: 0;
+}
+
+.notion-tasks-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.notion-tasks-container .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+}
+
+.month-selector button {
+  background: none;
+  border: 1px solid #ddd;
+  color: #333;
+  padding: 5px 10px;
+  margin: 0 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.month-selector span {
+  font-weight: 600;
+  width: 150px;
+  text-align: center;
+}
+
+.add-task-btn {
+  background-color: var(--notion-task-button-bg);
+  border: 1px solid var(--notion-task-button-border);
+  color: var(--notion-task-button-text);
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.add-task-btn:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.progress-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #e9ecef;
+  border-radius: 8px;
+}
+
+.progress-section > * {
+  flex: 1 1 300px; /* Flex-grow, flex-shrink, and basis */
+}
+
+.project-filter {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.task-columns {
+  display: flex;
+  gap: 20px;
+}
+
+.task-column {
+  flex: 1;
+  background-color: var(--notion-task-header-bg);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.task-column h3 {
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--notion-task-border);
+}
+
+.task-column ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+:root {
+  --notion-task-bg: #f9f9f9;
+  --notion-task-border: #e0e0e0;
+  --notion-task-text: #333;
+  --notion-task-header-bg: #f0f0f0;
+  --notion-task-button-bg: #007bff;
+  --notion-task-button-text: #fff;
+  --notion-task-button-border: #007bff;
+
+  --status-not-started-bg: #a0aec0; /* Gray */
+  --status-in-progress-bg: #4299e1; /* Blue */
+  --status-done-bg: #48bb78; /* Green */
+}
+
+.notion-tasks-container {
+  background-color: var(--notion-task-bg);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px solid var(--notion-task-border);
+}
+
+.notion-tasks-container h2 {
+  margin-top: 0;
+  color: var(--notion-task-text);
+}
+
+.notion-tasks-container .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--notion-task-border);
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+}
+
+.month-selector button {
+  background-color: var(--notion-task-button-bg);
+  border: 1px solid var(--notion-task-button-border);
+  color: var(--notion-task-button-text);
+  padding: 8px 12px;
+  margin: 0 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.month-selector button:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.month-selector span {
+  font-weight: 600;
+  width: 150px;
+  text-align: center;
+  color: var(--notion-task-text);
+}
+
+.notion-tasks-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.notion-tasks-container li.task-item {
+  background-color: #fff;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  color: var(--notion-task-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  border: 1px solid var(--notion-task-border);
+}
+
+.notion-tasks-container li.done .title {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.title {
+  flex-grow: 1;
+}
+
+.status-select {
+  font-size: 0.9em;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  color: #fff;
+  background-color: var(--status-not-started-bg); /* Default color */
+  margin-left: 15px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Status-specific colors */
+.status-未着手 .status-select {
+  background-color: var(--status-not-started-bg);
+}
+
+.status-進行中 .status-select {
+  background-color: var(--status-in-progress-bg);
+}
+
+.status-完了 .status-select {
+  background-color: var(--status-done-bg);
+}
+
+.delete-btn {
+  background-color: #e53e3e; /* Red */
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.edit-btn {
+  background-color: #3498db; /* Blue */
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,64 @@
+.github-activity-container {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  background-color: #f9f9f9;
+}
+
+.github-activity-container h2 {
+  margin-top: 0;
+}
+
+/* Styles for the yearly contribution graph */
+.year-grid {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.year-grid .calendar-week {
+  display: flex;
+  flex-direction: column;
+}
+
+.year-grid .calendar-day {
+  width: 12px;
+  height: 12px;
+  margin: 1px;
+  border-radius: 2px;
+}
+
+.error {
+  color: #d9534f;
+}
+
+.month-selector {
+  margin: 16px 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.month-selector select,
+.month-selector button {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.month-selector button:disabled {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.monthly-calendar-container {
+  margin-top: 16px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 24px 0;
+}

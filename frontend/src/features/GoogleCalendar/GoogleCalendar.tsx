@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import './GoogleCalendar.css';
+import { useState, useEffect } from "react";
+import "./GoogleCalendar.css";
 
 interface CalendarEvent {
   summary: string;
@@ -8,7 +8,7 @@ interface CalendarEvent {
 
 // Helper to format a date object to a YYYY-MM-DD string
 const toYYYYMMDD = (date: Date) => {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 };
 
 export const GoogleCalendar = () => {
@@ -22,11 +22,13 @@ export const GoogleCalendar = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/auth/status', {credentials: 'include'});
+        const response = await fetch("http://localhost:8000/api/auth/status", {
+          credentials: "include",
+        });
         const data = await response.json();
         setIsAuthenticated(data.authenticated);
-      } catch (err) {
-        setError('認証状態の確認に失敗しました。');
+      } catch {
+        setError("認証状態の確認に失敗しました。");
       } finally {
         setLoading(false);
       }
@@ -41,14 +43,17 @@ export const GoogleCalendar = () => {
         try {
           setLoading(true);
           const dateStr = toYYYYMMDD(targetDate);
-          const response = await fetch(`http://localhost:8000/api/google-calendar/events?date=${dateStr}`, {credentials: 'include'});
+          const response = await fetch(
+            `http://localhost:8000/api/google-calendar/events?date=${dateStr}`,
+            { credentials: "include" },
+          );
           if (!response.ok) {
-            throw new Error('Failed to fetch events');
+            throw new Error("Failed to fetch events");
           }
           const data = await response.json();
           setEvents(data);
-        } catch (err) {
-          setError('カレンダーの予定取得に失敗しました。');
+        } catch {
+          setError("カレンダーの予定取得に失敗しました。");
         } finally {
           setLoading(false);
         }
@@ -58,24 +63,30 @@ export const GoogleCalendar = () => {
   }, [isAuthenticated, targetDate]);
 
   const handleLogin = () => {
-    window.location.href = 'http://localhost:8000/auth/google';
+    window.location.href = "http://localhost:8000/auth/google";
   };
 
   const handleLogout = async () => {
-    await fetch('http://localhost:8000/api/auth/logout', {credentials: 'include'});
+    await fetch("http://localhost:8000/api/auth/logout", {
+      credentials: "include",
+    });
     setIsAuthenticated(false);
     setEvents([]);
   };
 
   const changeDate = (days: number) => {
-    setTargetDate(prevDate => {
+    setTargetDate((prevDate) => {
       const newDate = new Date(prevDate);
       newDate.setDate(newDate.getDate() + days);
       return newDate;
     });
   };
 
-  const formattedDate = new Date(targetDate).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
+  const formattedDate = new Date(targetDate).toLocaleDateString("ja-JP", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
 
   if (!isAuthenticated) {
     return (
@@ -90,10 +101,16 @@ export const GoogleCalendar = () => {
   return (
     <div className="gcal-widget">
       <div className="gcal-header">
-        <button onClick={() => changeDate(-1)} className="nav-btn">&lt;</button>
+        <button onClick={() => changeDate(-1)} className="nav-btn">
+          &lt;
+        </button>
         <h3>{formattedDate}</h3>
-        <button onClick={() => changeDate(1)} className="nav-btn">&gt;</button>
-        <button onClick={handleLogout} className="logout-btn">ログアウト</button>
+        <button onClick={() => changeDate(1)} className="nav-btn">
+          &gt;
+        </button>
+        <button onClick={handleLogout} className="logout-btn">
+          ログアウト
+        </button>
       </div>
       {loading && <p>予定を読み込み中...</p>}
       {error && <p className="error">{error}</p>}
@@ -101,15 +118,21 @@ export const GoogleCalendar = () => {
       {!loading && !error && events.length > 0 && (
         <ul className="event-list">
           {events.map((event, index) => {
-            const isAllDay = !event.start.includes('T');
+            const isAllDay = !event.start.includes("T");
             const eventDate = new Date(event.start);
-            const time = isAllDay ? '終日' : eventDate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            const time = isAllDay
+              ? "終日"
+              : eventDate.toLocaleTimeString("ja-JP", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
 
             return (
-              <li key={index} className={`event-item ${isAllDay ? 'is-allday' : ''}`}>
-                <div className="event-time-container">
-                  {time}
-                </div>
+              <li
+                key={index}
+                className={`event-item ${isAllDay ? "is-allday" : ""}`}
+              >
+                <div className="event-time-container">{time}</div>
                 <div className="event-details">
                   <span className="event-summary">{event.summary}</span>
                 </div>

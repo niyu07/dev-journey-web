@@ -1,0 +1,149 @@
+.cancellation-widget {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  margin-top: 20px;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.widget-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-body p {
+  color: #6b7280;
+  margin-top: 0;
+}
+
+.controls-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.controls-area select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.check-button {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.check-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.message-area {
+  margin-top: 15px;
+  font-weight: 500;
+}
+
+.candidates-list {
+  margin-top: 20px;
+}
+
+.filter-and-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.filter-input {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  flex-grow: 1;
+}
+
+.select-all-btn {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.events-found-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.events-list {
+  list-style-type: none;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.events-list li {
+  padding: 8px 4px;
+  color: #333; /* Ensure text is dark */
+}
+
+.events-list li:not(:last-child) {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.events-list li label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-holiday {
+  color: #c2410c; /* Amber 700 */
+  font-weight: 500;
+}
+
+.event-date {
+  color: #6b7280; /* Gray 500 */
+}
+
+.cancel-button {
+  background-color: #ef4444;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 15px;
+}
+
+.cancel-button:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+}

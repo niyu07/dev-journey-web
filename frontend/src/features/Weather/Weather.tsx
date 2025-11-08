@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface WeatherData {
   city: string;
@@ -8,11 +8,11 @@ interface WeatherData {
 }
 
 const majorCities = {
-  "東京": { lat: 35.6895, lon: 139.6917 },
-  "大阪": { lat: 34.6937, lon: 135.5023 },
-  "札幌": { lat: 43.0618, lon: 141.3545 },
-  "福岡": { lat: 33.5904, lon: 130.4017 },
-  "名古屋": { lat: 35.1815, lon: 136.9066 },
+  東京: { lat: 35.6895, lon: 139.6917 },
+  大阪: { lat: 34.6937, lon: 135.5023 },
+  札幌: { lat: 43.0618, lon: 141.3545 },
+  福岡: { lat: 33.5904, lon: 130.4017 },
+  名古屋: { lat: 35.1815, lon: 136.9066 },
 };
 
 export const Weather = () => {
@@ -25,14 +25,16 @@ export const Weather = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost:8000/api/weather?lat=${lat}&lon=${lon}`);
+      const response = await fetch(
+        `http://localhost:8000/api/weather?lat=${lat}&lon=${lon}`,
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch weather data');
+        throw new Error("Failed to fetch weather data");
       }
       const data: WeatherData = await response.json();
       setWeather(data);
-    } catch (err) {
-      setError('天気情報の取得に失敗しました。');
+    } catch {
+      setError("天気情報の取得に失敗しました。");
     } finally {
       setLoading(false);
     }
@@ -54,21 +56,28 @@ export const Weather = () => {
           setSelectedCity("Current Location"); // Update UI to reflect this choice
         },
         () => {
-          setError('位置情報の取得に失敗しました。');
-        }
+          setError("位置情報の取得に失敗しました。");
+        },
       );
     } else {
-      setError('お使いのブラウザは位置情報に対応していません。');
+      setError("お使いのブラウザは位置情報に対応していません。");
     }
   };
 
   return (
     <div>
       <div>
-        <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
-          {selectedCity === "Current Location" && <option value="Current Location">現在地</option>}
-          {Object.keys(majorCities).map(city => (
-            <option key={city} value={city}>{city}</option>
+        <select
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+        >
+          {selectedCity === "Current Location" && (
+            <option value="Current Location">現在地</option>
+          )}
+          {Object.keys(majorCities).map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
           ))}
         </select>
         <button onClick={handleCurrentLocation}>現在地</button>
@@ -80,9 +89,9 @@ export const Weather = () => {
         <div>
           <h2>{weather.city}</h2>
           <div>
-            <img 
-              src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`} 
-              alt={weather.description} 
+            <img
+              src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+              alt={weather.description}
             />
             <span>{weather.description}</span>
           </div>
