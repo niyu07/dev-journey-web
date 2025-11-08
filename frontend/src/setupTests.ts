@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 
 // Mock the global fetch API for all tests
 beforeEach(() => {
-  vi.spyOn(window, 'fetch').mockImplementation(() => {
+  vi.spyOn(window, "fetch").mockImplementation(() => {
     const mockResponse = {
       ok: true,
       status: 200,
