@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import './GitHubActivity.css';
-import MonthlyCalendar from './MonthlyCalendar';
+import React, { useState, useEffect } from "react";
+import "./GitHubActivity.css";
+import MonthlyCalendar from "./MonthlyCalendar";
 
 interface ContributionDay {
   contributionCount: number;
@@ -18,8 +18,11 @@ interface ContributionCalendar {
 }
 
 const GitHubActivity: React.FC = () => {
-  const [yearCalendar, setYearCalendar] = useState<ContributionCalendar | null>(null);
-  const [monthCalendar, setMonthCalendar] = useState<ContributionCalendar | null>(null);
+  const [yearCalendar, setYearCalendar] = useState<ContributionCalendar | null>(
+    null,
+  );
+  const [monthCalendar, setMonthCalendar] =
+    useState<ContributionCalendar | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState<string | null>(null);
   const [monthError, setMonthError] = useState<string | null>(null);
@@ -29,7 +32,9 @@ const GitHubActivity: React.FC = () => {
   useEffect(() => {
     const fetchGitHubYearlyActivity = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/github/activity');
+        const response = await fetch(
+          "http://localhost:8000/api/github/activity",
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -57,7 +62,9 @@ const GitHubActivity: React.FC = () => {
     const to_date = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
     try {
-      const response = await fetch(`http://localhost:8000/api/github/activity?from_date=${from_date}&to_date=${to_date}`);
+      const response = await fetch(
+        `http://localhost:8000/api/github/activity?from_date=${from_date}&to_date=${to_date}`,
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -75,10 +82,10 @@ const GitHubActivity: React.FC = () => {
   const handleDateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target;
     const newDate = new Date(selectedDate);
-    if (name === 'year') {
+    if (name === "year") {
       newDate.setFullYear(parseInt(value, 10));
     }
-    if (name === 'month') {
+    if (name === "month") {
       newDate.setMonth(parseInt(value, 10));
     }
     setSelectedDate(newDate);
@@ -91,10 +98,14 @@ const GitHubActivity: React.FC = () => {
   return (
     <div className="github-activity-container">
       <h2>GitHub Contribution Graph (Last Year)</h2>
-      {error && <p className="error">Error fetching GitHub activity: {error}</p>}
+      {error && (
+        <p className="error">Error fetching GitHub activity: {error}</p>
+      )}
       {yearCalendar ? (
         <div>
-          <p>{yearCalendar.totalContributions} contributions in the last year</p>
+          <p>
+            {yearCalendar.totalContributions} contributions in the last year
+          </p>
           <div className="calendar-grid year-grid">
             {yearCalendar.weeks.map((week, weekIndex) => (
               <div key={weekIndex} className="calendar-week">
@@ -110,28 +121,57 @@ const GitHubActivity: React.FC = () => {
             ))}
           </div>
         </div>
-      ) : <p>Loading yearly activity...</p>}
+      ) : (
+        <p>Loading yearly activity...</p>
+      )}
 
       <hr />
 
       <h2>Monthly Activity</h2>
       <div className="month-selector">
-        <select name="year" value={selectedDate.getFullYear()} onChange={handleDateChange}>
-          {years.map(year => <option key={year} value={year}>{year}</option>)}
+        <select
+          name="year"
+          value={selectedDate.getFullYear()}
+          onChange={handleDateChange}
+        >
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
         </select>
-        <select name="month" value={selectedDate.getMonth()} onChange={handleDateChange}>
-          {months.map(month => <option key={month} value={month}>{new Date(0, month).toLocaleString('default', { month: 'long' })}</option>)}
+        <select
+          name="month"
+          value={selectedDate.getMonth()}
+          onChange={handleDateChange}
+        >
+          {months.map((month) => (
+            <option key={month} value={month}>
+              {new Date(0, month).toLocaleString("default", { month: "long" })}
+            </option>
+          ))}
         </select>
         <button onClick={fetchMonthlyActivity} disabled={isLoadingMonthly}>
-          {isLoadingMonthly ? 'Loading...' : 'Get Monthly Activity'}
+          {isLoadingMonthly ? "Loading..." : "Get Monthly Activity"}
         </button>
       </div>
 
-      {monthError && <p className="error">Error fetching monthly activity: {monthError}</p>}
+      {monthError && (
+        <p className="error">Error fetching monthly activity: {monthError}</p>
+      )}
       {monthCalendar && monthCalendar.weeks && (
-         <div className="monthly-calendar-container">
-          <p>{monthCalendar.totalContributions} contributions in {selectedDate.toLocaleString('default', { month: 'long' , year: 'numeric'})}</p>
-          <MonthlyCalendar weeks={monthCalendar.weeks} selectedDate={selectedDate} />
+        <div className="monthly-calendar-container">
+          <p>
+            {monthCalendar.totalContributions} contributions in{" "}
+            {selectedDate.toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+          <MonthlyCalendar
+            weeks={monthCalendar.weeks}
+            selectedDate={selectedDate}
+          />
         </div>
       )}
     </div>

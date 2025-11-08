@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 
 interface Candidate {
   id: string;
@@ -11,10 +11,13 @@ interface HolidayCancellationProps {
   month: number;
 }
 
-const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }) => {
+const HolidayCancellation: React.FC<HolidayCancellationProps> = ({
+  year,
+  month,
+}) => {
   const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filterKeyword, setFilterKeyword] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -23,20 +26,26 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
     setMessage(null);
     setAllCandidates([]);
     setSelectedIds(new Set());
-    setFilterKeyword('');
+    setFilterKeyword("");
     try {
-      const response = await fetch(`/api/google-calendar/cancellation-candidates?year=${year}&month=${month}`);
+      const response = await fetch(
+        `/api/google-calendar/cancellation-candidates?year=${year}&month=${month}`,
+      );
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to find candidates');
+        throw new Error(errorData.detail || "Failed to find candidates");
       }
       const data: Candidate[] = await response.json();
       setAllCandidates(data);
       if (data.length === 0) {
-        setMessage('No recurring events found on public holidays for this month.');
+        setMessage(
+          "No recurring events found on public holidays for this month.",
+        );
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'An unknown error occurred');
+      setMessage(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     }
     setIsLoading(false);
   };
@@ -45,8 +54,8 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
     if (!filterKeyword) {
       return allCandidates;
     }
-    return allCandidates.filter(c => 
-      c.summary.toLowerCase().includes(filterKeyword.toLowerCase())
+    return allCandidates.filter((c) =>
+      c.summary.toLowerCase().includes(filterKeyword.toLowerCase()),
     );
   }, [allCandidates, filterKeyword]);
 
@@ -64,12 +73,12 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
     if (selectedIds.size === filteredCandidates.length) {
       // Deselect all visible
       const newSelectedIds = new Set(selectedIds);
-      filteredCandidates.forEach(c => newSelectedIds.delete(c.id));
+      filteredCandidates.forEach((c) => newSelectedIds.delete(c.id));
       setSelectedIds(newSelectedIds);
     } else {
       // Select all visible
       const newSelectedIds = new Set(selectedIds);
-      filteredCandidates.forEach(c => newSelectedIds.add(c.id));
+      filteredCandidates.forEach((c) => newSelectedIds.add(c.id));
       setSelectedIds(newSelectedIds);
     }
   };
@@ -79,21 +88,23 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
     setMessage(null);
     try {
       const event_ids = Array.from(selectedIds);
-      const response = await fetch('/api/google-calendar/batch-delete-events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/google-calendar/batch-delete-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event_ids }),
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete events');
+        throw new Error(errorData.detail || "Failed to delete events");
       }
       const result = await response.json();
       setMessage(result.message);
       // Refetch to clear the list
       findCandidates();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'An unknown error occurred');
+      setMessage(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     }
     setIsLoading(false);
   };
@@ -101,9 +112,12 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
   return (
     <div className="holiday-cancellation-container">
       <h4>Holiday Recurring Event Cancellation</h4>
-      <p>Find and cancel recurring events that fall on public holidays for the selected month.</p>
+      <p>
+        Find and cancel recurring events that fall on public holidays for the
+        selected month.
+      </p>
       <button onClick={findCandidates} disabled={isLoading}>
-        {isLoading ? 'Checking...' : 'Check for Recurring Events on Holidays'}
+        {isLoading ? "Checking..." : "Check for Recurring Events on Holidays"}
       </button>
 
       {message && <p className="cancellation-message">{message}</p>}
@@ -111,7 +125,7 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
       {allCandidates.length > 0 && (
         <div className="candidates-list">
           <div className="filter-and-actions">
-            <input 
+            <input
               type="text"
               placeholder="Filter by keyword..."
               value={filterKeyword}
@@ -119,16 +133,20 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
               className="filter-input"
             />
             <button onClick={toggleSelectAll}>
-              {selectedIds.size === filteredCandidates.length ? 'Deselect All' : 'Select All'}
+              {selectedIds.size === filteredCandidates.length
+                ? "Deselect All"
+                : "Select All"}
             </button>
           </div>
 
-          <h5>Found {filteredCandidates.length} matching recurring event(s):</h5>
+          <h5>
+            Found {filteredCandidates.length} matching recurring event(s):
+          </h5>
           <ul>
-            {filteredCandidates.map(c => (
+            {filteredCandidates.map((c) => (
               <li key={c.id}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={selectedIds.has(c.id)}
                   onChange={(e) => handleCheckboxChange(c.id, e.target.checked)}
                 />
@@ -136,8 +154,14 @@ const HolidayCancellation: React.FC<HolidayCancellationProps> = ({ year, month }
               </li>
             ))}
           </ul>
-          <button onClick={handleBatchDelete} disabled={isLoading || selectedIds.size === 0} className="cancel-button">
-            {isLoading ? 'Cancelling...' : `Cancel ${selectedIds.size} Selected Event(s)`}
+          <button
+            onClick={handleBatchDelete}
+            disabled={isLoading || selectedIds.size === 0}
+            className="cancel-button"
+          >
+            {isLoading
+              ? "Cancelling..."
+              : `Cancel ${selectedIds.size} Selected Event(s)`}
           </button>
         </div>
       )}

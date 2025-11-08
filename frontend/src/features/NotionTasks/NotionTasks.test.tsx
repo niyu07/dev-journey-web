@@ -1,11 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import NotionTasks from './NotionTasks';
+import { render, screen, waitFor } from "@testing-library/react";
+import NotionTasks from "./NotionTasks";
 
 global.fetch = jest.fn();
 
-describe('NotionTasks', () => {
-  it('renders tasks on successful fetch', async () => {
-    const mockTasks = [{ id: '1', title: 'Test Task 1' }];
+describe("NotionTasks", () => {
+  it("renders tasks on successful fetch", async () => {
+    const mockTasks = [{ id: "1", title: "Test Task 1" }];
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockTasks,
@@ -14,11 +14,11 @@ describe('NotionTasks', () => {
     render(<NotionTasks />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Task 1')).toBeInTheDocument();
+      expect(screen.getByText("Test Task 1")).toBeInTheDocument();
     });
   });
 
-  it('renders error message on fetch failure', async () => {
+  it("renders error message on fetch failure", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
     });
@@ -26,7 +26,9 @@ describe('NotionTasks', () => {
     render(<NotionTasks />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Error: Failed to fetch Notion tasks/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Error: Failed to fetch Notion tasks/i),
+      ).toBeInTheDocument();
     });
   });
 });

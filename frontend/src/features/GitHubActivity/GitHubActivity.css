@@ -49,16 +49,16 @@
 }
 
 .month-selector button:disabled {
-    background-color: #eee;
-    cursor: not-allowed;
+  background-color: #eee;
+  cursor: not-allowed;
 }
 
 .monthly-calendar-container {
-    margin-top: 16px;
+  margin-top: 16px;
 }
 
 hr {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 24px 0;
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 24px 0;
 }

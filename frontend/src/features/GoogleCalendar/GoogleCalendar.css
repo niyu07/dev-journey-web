@@ -84,7 +84,7 @@
 
 /* The vertical timeline bar */
 .event-list::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 28px; /* Align with the center of the dot */
   top: 12px;
@@ -113,7 +113,7 @@
 
 /* The dot on the timeline */
 .event-time-container::after {
-  content: '';
+  content: "";
   position: absolute;
   right: -13px; /* Position relative to the time container */
   top: 5px;

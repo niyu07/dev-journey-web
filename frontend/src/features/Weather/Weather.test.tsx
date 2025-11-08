@@ -1,50 +1,58 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
-import { Weather } from './Weather';
+import { render, screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+import { Weather } from "./Weather";
 
-describe('Weather', () => {
+describe("Weather", () => {
   beforeEach(() => {
     // Mock fetch function before each test
-    global.fetch = vi.fn();
+    window.fetch = vi.fn();
   });
 
-  it('displays loading state initially', () => {
-    (fetch as any).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+  it("displays loading state initially", () => {
+    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
     render(<Weather />);
-    expect(screen.getByText('天気を読み込み中...')).toBeInTheDocument();
+    expect(screen.getByText("天気を読み込み中...")).toBeInTheDocument();
   });
 
-  it('displays weather information after successful fetch', async () => {
+  it("displays weather information after successful fetch", async () => {
     const mockWeatherData = {
-      city: 'Tokyo',
-      description: '晴れ',
+      city: "Tokyo",
+      description: "晴れ",
       temperature: 25.5,
-      icon: '01d',
+      icon: "01d",
     };
-    (fetch as any).mockResolvedValue({ 
-      ok: true, 
-      json: () => Promise.resolve(mockWeatherData) 
+    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockWeatherData),
     });
 
     render(<Weather />);
 
     await waitFor(() => {
-      expect(screen.getByText('Tokyo')).toBeInTheDocument();
+      expect(screen.getByText("Tokyo")).toBeInTheDocument();
     });
 
-    expect(screen.getByText('晴れ')).toBeInTheDocument();
-    expect(screen.getByText('25.5°C')).toBeInTheDocument();
-    const icon = screen.getByRole('img');
-    expect(icon).toHaveAttribute('src', 'https://openweathermap.org/img/wn/01d@2x.png');
+    expect(screen.getByText("晴れ")).toBeInTheDocument();
+    expect(screen.getByText("25.5°C")).toBeInTheDocument();
+    const icon = screen.getByRole("img");
+    expect(icon).toHaveAttribute(
+      "src",
+      "https://openweathermap.org/img/wn/01d@2x.png",
+    );
   });
 
-  it('displays an error message on fetch failure', async () => {
-    (fetch as any).mockResolvedValue({ ok: false });
+  it("displays an error message on fetch failure", async () => {
+    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
 
     render(<Weather />);
 
     await waitFor(() => {
-      expect(screen.getByText('天気情報の取得に失敗しました。')).toBeInTheDocument();
+      expect(
+        screen.getByText("天気情報の取得に失敗しました。"),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import './StudyLog.css';
+import React, { useState, useEffect } from "react";
+import "./StudyLog.css";
 
 interface StudyLogEntry {
   id: string;
@@ -17,21 +17,23 @@ const StudyLog: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Form states
-  const [title, setTitle] = useState('');
-  const [studyTime, setStudyTime] = useState('');
-  const [details, setDetails] = useState('');
+  const [title, setTitle] = useState("");
+  const [studyTime, setStudyTime] = useState("");
+  const [details, setDetails] = useState("");
 
   const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
-  const fetchStudyLogs = async (date: Date) => {
+  const fetchStudyLogs = React.useCallback(async (date: Date) => {
     setError(null);
     try {
       const formattedDate = formatDate(date);
-      const response = await fetch(`http://localhost:8000/api/studylog?date=${formattedDate}`);
+      const response = await fetch(
+        `http://localhost:8000/api/studylog?date=${formattedDate}`,
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch study logs');
+        throw new Error("Failed to fetch study logs");
       }
       const data = await response.json();
       setStudyLogs(data);
@@ -40,23 +42,23 @@ const StudyLog: React.FC = () => {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An unknown error occurred while fetching study logs');
+        setError("An unknown error occurred while fetching study logs");
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStudyLogs(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, fetchStudyLogs]);
 
   const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/api/studylog', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/api/studylog", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title,
@@ -67,17 +69,17 @@ const StudyLog: React.FC = () => {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to add study log');
+        throw new Error(errorData.detail || "Failed to add study log");
       }
-      setTitle('');
-      setStudyTime('');
-      setDetails('');
+      setTitle("");
+      setStudyTime("");
+      setDetails("");
       fetchStudyLogs(selectedDate); // Refresh logs
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An unknown error occurred while adding study log');
+        setError("An unknown error occurred while adding study log");
       }
     }
   };
@@ -85,23 +87,26 @@ const StudyLog: React.FC = () => {
   const handleSummarizeDay = async () => {
     setError(null);
     setSummary(null);
-    const logsToSummarize = studyLogs.filter(log => selectedLogs.has(log.id));
+    const logsToSummarize = studyLogs.filter((log) => selectedLogs.has(log.id));
     if (logsToSummarize.length === 0) {
-      setError('Please select at least one log to summarize.');
+      setError("Please select at least one log to summarize.");
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/studylog/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        "http://localhost:8000/api/studylog/summarize",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ study_logs: logsToSummarize }),
         },
-        body: JSON.stringify({ study_logs: logsToSummarize }),
-      });
+      );
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to summarize day');
+        throw new Error(errorData.detail || "Failed to summarize day");
       }
       const data = await response.json();
       setSummary(data.summary);
@@ -109,7 +114,7 @@ const StudyLog: React.FC = () => {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An unknown error occurred while summarizing day');
+        setError("An unknown error occurred while summarizing day");
       }
     }
   };
@@ -125,20 +130,23 @@ const StudyLog: React.FC = () => {
   };
 
   const handleDeleteLog = async (logId: string) => {
-    if (window.confirm('Are you sure you want to delete this log?')) {
+    if (window.confirm("Are you sure you want to delete this log?")) {
       try {
-        const response = await fetch(`http://localhost:8000/api/studylog/${logId}`, {
-          method: 'DELETE',
-        });
+        const response = await fetch(
+          `http://localhost:8000/api/studylog/${logId}`,
+          {
+            method: "DELETE",
+          },
+        );
         if (!response.ok) {
-          throw new Error('Failed to delete study log');
+          throw new Error("Failed to delete study log");
         }
         fetchStudyLogs(selectedDate); // Refresh logs
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError('An unknown error occurred while deleting study log');
+          setError("An unknown error occurred while deleting study log");
         }
       }
     }
@@ -175,15 +183,29 @@ const StudyLog: React.FC = () => {
           <form onSubmit={handleAddLog} className="add-log-form">
             <div className="form-group">
               <label>内容</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label>学習時間（分）</label>
-              <input type="number" value={studyTime} onChange={(e) => setStudyTime(e.target.value)} required />
+              <input
+                type="number"
+                value={studyTime}
+                onChange={(e) => setStudyTime(e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label>詳細</label>
-              <textarea value={details} onChange={(e) => setDetails(e.target.value)} rows={3}></textarea>
+              <textarea
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                rows={3}
+              ></textarea>
             </div>
             <button type="submit">Add Log</button>
           </form>
@@ -195,24 +217,36 @@ const StudyLog: React.FC = () => {
             <p>No logs for this day.</p>
           ) : (
             <ul>
-              {studyLogs.map(log => (
+              {studyLogs.map((log) => (
                 <li key={log.id} className="study-log-item">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={selectedLogs.has(log.id)}
                     onChange={() => handleLogSelection(log.id)}
                   />
                   <div className="log-content">
-                    <h4>{log.title} ({log.study_time}分)</h4>
+                    <h4>
+                      {log.title} ({log.study_time}分)
+                    </h4>
                     {log.details && <p>{log.details}</p>}
                   </div>
-                  <button onClick={() => handleDeleteLog(log.id)} className="delete-log-btn">Delete</button>
+                  <button
+                    onClick={() => handleDeleteLog(log.id)}
+                    className="delete-log-btn"
+                  >
+                    Delete
+                  </button>
                 </li>
               ))}
             </ul>
           )}
 
-          <button onClick={handleSummarizeDay} disabled={selectedLogs.size === 0}>Summarize Selected</button>
+          <button
+            onClick={handleSummarizeDay}
+            disabled={selectedLogs.size === 0}
+          >
+            Summarize Selected
+          </button>
           {summary && (
             <div className="summary-output">
               <h3>Today's Summary</h3>
