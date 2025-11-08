@@ -8,6 +8,7 @@ import NotionTasks from './features/NotionTasks/NotionTasks';
 import StudyLog from './features/StudyLog/StudyLog';
 import WorkTimeTracker from './features/WorkTimeTracker/WorkTimeTracker';
 import Accounting from './features/Accounting/Accounting';
+import GitHubActivity from './features/GitHubActivity/GitHubActivity';
 import './App.css';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
       <StudyLog />
       <WorkTimeTracker onLogSubmit={handleLogSubmit} />
       <Accounting />
+      <GitHubActivity />
     </div>
   );
 }

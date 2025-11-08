@@ -32,6 +32,8 @@ SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY")
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET_KEY]):
     raise ValueError("Google OAuth environment variables are not set. Please check your .env file.")
@@ -46,6 +48,11 @@ if not GEMINI_API_KEY:
     GEMINI_API_KEY = None
 else:
     genai.configure(api_key=GEMINI_API_KEY)
+
+if not all([GITHUB_USERNAME, GITHUB_TOKEN]):
+    print("GitHub environment variables (GITHUB_USERNAME, GITHUB_TOKEN) are not fully set. GitHub integration will be disabled.")
+    GITHUB_USERNAME = None
+    GITHUB_TOKEN = None
 
 # --- FastAPI App Initialization ---
 app = FastAPI()
@@ -642,6 +649,71 @@ async def delete_study_log(log_id: str):
         print(f"An unexpected error occurred: {e}")
 
         raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting study log.")
+
+# --- GitHub Activity Endpoint ---
+
+@app.get("/api/github/activity")
+async def get_github_activity(from_date: str | None = None, to_date: str | None = None):
+    if not GITHUB_USERNAME or not GITHUB_TOKEN:
+        raise HTTPException(status_code=500, detail="GitHub integration is not configured.")
+
+    headers = {
+        "Authorization": f"bearer {GITHUB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    query = """
+        query($username: String!, $from: DateTime, $to: DateTime) {
+          user(login: $username) {
+            contributionsCollection(from: $from, to: $to) {
+              contributionCalendar {
+                totalContributions
+                weeks {
+                  contributionDays {
+                    contributionCount
+                    date
+                    color
+                  }
+                }
+              }
+            }
+          }
+        }
+    """
+
+    variables = {
+        "username": GITHUB_USERNAME,
+        "from": from_date,
+        "to": to_date
+    }
+
+    # Remove null values from variables so the query uses defaults when dates are not provided
+    variables = {k: v for k, v in variables.items() if v is not None}
+
+    graphql_query = {
+        "query": query,
+        "variables": variables
+    }
+
+    url = "https://api.github.com/graphql"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, json=graphql_query)
+            response.raise_for_status()
+            data = response.json()
+
+        if "errors" in data:
+            raise HTTPException(status_code=400, detail=data["errors"])
+
+        return data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+
+    except httpx.HTTPStatusError as e:
+        print(f"Error fetching GitHub activity: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Failed to fetch GitHub activity: {e.response.text}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while fetching GitHub activity.")
 
 
 # --- Unipaa Assignments Synchronization ---

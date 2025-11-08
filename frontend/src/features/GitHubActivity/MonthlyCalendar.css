@@ -1,0 +1,56 @@
+.monthly-calendar {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.day-name {
+  padding: 4px;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.day-cell {
+  position: relative;
+  height: 80px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.day-cell.empty {
+  background-color: transparent;
+  border: none;
+}
+
+.day-number {
+  font-size: 0.8em;
+  font-weight: bold;
+  align-self: flex-start;
+}
+
+.contribution-count {
+  font-size: 1.2em;
+  font-weight: bold;
+  align-self: center;
+  justify-self: center;
+  color: rgba(0, 0, 0, 0.6);
+}
