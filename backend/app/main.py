@@ -709,10 +709,7 @@ async def summarize_study_log(request_body: SummarizeStudyLogRequest):
 
     for log in request_body.study_logs:
         prompt_parts.append(
-            f"- 学習内容: {log.get("title",
-                               "不明")}, 学習時間: {log.get("study_time",
-                                                      0)}分, 詳細: {log.get("details",
-                                                                         "なし")}"
+            f'- 学習内容: {log.get("title", "不明")}, 学習時間: {log.get("study_time", 0)}分, 詳細: {log.get("details", "なし")}'
         )
 
     prompt_parts.append("---要約---")
