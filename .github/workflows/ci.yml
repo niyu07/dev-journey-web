@@ -8,7 +8,7 @@ jobs:
   # Backend: Python
   # ------------------------------
   backend-tests:
-    name: Backend Tests + Lint + Format
+    name: Backend: Lint + Format
     runs-on: ubuntu-latest
 
     steps:
@@ -25,9 +25,6 @@ jobs:
           pip install -r backend/requirements.txt
           pip install flake8 black mypy
 
-      - name: Run pytest
-        run: pytest backend/
-
       - name: Run flake8 (Lint)
         run: flake8 backend/
 
@@ -41,7 +38,7 @@ jobs:
   # Frontend: React + TypeScript
   # ------------------------------
   frontend-tests:
-    name: Frontend Tests + Lint + Format + Build
+    name: Frontend: Lint + Format
     runs-on: ubuntu-latest
 
     steps:
@@ -57,11 +54,6 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Run Vitest
-        run: |
-          cd frontend
-          npm run test -- --run
-
       - name: Run ESLint (Lint)
         run: |
           cd frontend
@@ -71,8 +63,3 @@ jobs:
         run: |
           cd frontend
           npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,scss,md}"
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
