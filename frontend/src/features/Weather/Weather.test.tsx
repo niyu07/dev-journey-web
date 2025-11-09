@@ -3,16 +3,12 @@ import { vi } from "vitest";
 import { Weather } from "./Weather";
 
 describe("Weather", () => {
-  beforeEach(() => {
-    // Mock fetch function before each test
-    window.fetch = vi.fn();
-  });
+  // The global setup in `setupTests.ts` handles the basic fetch mocking
+  // and cleanup. We can override the mock's implementation for specific
+  // tests here.
 
   it("displays loading state initially", () => {
-    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({}),
-    });
+    // The default global mock is sufficient for this test
     render(<Weather />);
     expect(screen.getByText("天気を読み込み中...")).toBeInTheDocument();
   });
@@ -24,10 +20,11 @@ describe("Weather", () => {
       temperature: 25.5,
       icon: "01d",
     };
-    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    // Override the global fetch mock for this specific test
+    vi.spyOn(window, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockWeatherData),
-    });
+    } as Response);
 
     render(<Weather />);
 
@@ -45,7 +42,8 @@ describe("Weather", () => {
   });
 
   it("displays an error message on fetch failure", async () => {
-    (window.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
+    // Override the global fetch mock for this specific test
+    vi.spyOn(window, 'fetch').mockResolvedValue({ ok: false } as Response);
 
     render(<Weather />);
 

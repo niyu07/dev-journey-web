@@ -42,7 +42,8 @@ if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET_KEY]):
 
 if not all([NOTION_API_KEY, NOTION_DATABASE_ID]):
     print(
-        "Notion environment variables (NOTION_API_KEY, NOTION_DATABASE_ID) are not fully set. Notion integration will be disabled."
+        "Notion environment variables (NOTION_API_KEY, NOTION_DATABASE_ID) "
+        "are not fully set. Notion integration will be disabled."
     )
     NOTION_API_KEY = None
     NOTION_DATABASE_ID = None
@@ -55,7 +56,8 @@ else:
 
 if not all([GITHUB_USERNAME, GITHUB_TOKEN]):
     print(
-        "GitHub environment variables (GITHUB_USERNAME, GITHUB_TOKEN) are not fully set. GitHub integration will be disabled."
+        "GitHub environment variables (GITHUB_USERNAME, GITHUB_TOKEN) "
+        "are not fully set. GitHub integration will be disabled."
     )
     GITHUB_USERNAME = None
     GITHUB_TOKEN = None
@@ -67,8 +69,7 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",
-                   "https://ichipol.g.hiroshima-cu.ac.jp"],
+    allow_origins=["http://localhost:5173", "https://ichipol.g.hiroshima-cu.ac.jp"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -151,8 +152,7 @@ async def auth_google_callback(request: Request):
         return RedirectResponse("http://localhost:5173")
     except Exception as e:
         print(f"Error in callback: {e}")
-        raise HTTPException(status_code=500,
-                            detail="Authentication callback failed.")
+        raise HTTPException(status_code=500, detail="Authentication callback failed.")
 
 
 @app.get("/api/auth/logout")
@@ -179,12 +179,10 @@ def get_calendar_events(request: Request, date: str | None = None):
             target_date = datetime.datetime.utcnow().date()
 
         time_min = (
-            datetime.datetime.combine(
-                target_date, datetime.time.min).isoformat() + "Z"
+            datetime.datetime.combine(target_date, datetime.time.min).isoformat() + "Z"
         )
         time_max = (
-            datetime.datetime.combine(
-                target_date, datetime.time.max).isoformat() + "Z"
+            datetime.datetime.combine(target_date, datetime.time.max).isoformat() + "Z"
         )
 
         events_result = (
@@ -230,8 +228,7 @@ def get_calendar_events(request: Request, date: str | None = None):
 
 
 @app.get("/api/google-calendar/cancellation-candidates")
-def get_cancellation_candidates(
-        request: Request, start_date: str, end_date: str):
+def get_cancellation_candidates(request: Request, start_date: str, end_date: str):
     try:
         credentials = get_credentials(request)
         if not credentials or not credentials.valid:
@@ -300,8 +297,7 @@ def get_cancellation_candidates(
             status_code=500, detail=f"Failed to find cancellation candidates: {error}"
         )
     except Exception as e:
-        print(
-            f"An unexpected error occurred in get_cancellation_candidates: {e}")
+        print(f"An unexpected error occurred in get_cancellation_candidates: {e}")
         raise HTTPException(
             status_code=500, detail=f"An unexpected server error occurred: {e}"
         )
@@ -337,8 +333,7 @@ def batch_delete_events(request: Request, body: BatchDeleteRequest):
 
     except HttpError as error:
         print(f"An error occurred during batch delete: {error}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to delete events: {error}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete events: {error}")
 
 
 @app.get("/api/notion/tasks")
@@ -371,21 +366,16 @@ async def get_notion_tasks():
                 # Ensure title_property is not empty and is a list
                 if isinstance(title_property, list) and title_property:
                     title = title_property[0].get("plain_text")
-                    status_property = properties.get(
-                        "Status", {}).get("status", {})
-                    status = status_property.get(
-                        "name") if status_property else None
+                    status_property = properties.get("Status", {}).get("status", {})
+                    status = status_property.get("name") if status_property else None
                     date_property = properties.get("日付", {}).get("date")
-                    date = date_property.get(
-                        "start") if date_property else None
+                    date = date_property.get("start") if date_property else None
                     type_property = properties.get("種類", {}).get("select", {})
-                    task_type = type_property.get(
-                        "name") if type_property else None
+                    task_type = type_property.get("name") if type_property else None
                     project_property = properties.get("プロジェクト", {}).get(
                         "select", {}
                     )
-                    project = project_property.get(
-                        "name") if project_property else None
+                    project = project_property.get("name") if project_property else None
                     tasks.append(
                         {
                             "id": page["id"],
@@ -437,8 +427,7 @@ async def update_task(task_id: str, request_body: UpdateTaskRequest):
 
     properties = {}
     if request_body.title is not None:
-        properties["名前"] = {
-            "title": [{"text": {"content": request_body.title}}]}
+        properties["名前"] = {"title": [{"text": {"content": request_body.title}}]}
     if request_body.status is not None:
         properties["Status"] = {"status": {"name": request_body.status}}
     if request_body.task_type is not None:
@@ -500,10 +489,7 @@ async def create_task(request_body: CreateTaskRequest):
     if request_body.project:
         properties["プロジェクト"] = {"select": {"name": request_body.project}}
 
-    payload = {
-        "parent": {
-            "database_id": NOTION_DATABASE_ID},
-        "properties": properties}
+    payload = {"parent": {"database_id": NOTION_DATABASE_ID}, "properties": properties}
 
     try:
         async with httpx.AsyncClient() as client:
@@ -723,10 +709,7 @@ async def summarize_study_log(request_body: SummarizeStudyLogRequest):
 
     for log in request_body.study_logs:
         prompt_parts.append(
-            f"- 学習内容: {log.get("title",
-                               "不明")}, 学習時間: {log.get("study_time",
-                                                      0)}分, 詳細: {log.get("details",
-                                                                         "なし")}"
+            f'- 学習内容: {log.get("title", "不明")}, 学習時間: {log.get("study_time", 0)}分, 詳細: {log.get("details", "なし")}'
         )
 
     prompt_parts.append("---要約---")
@@ -794,8 +777,7 @@ async def delete_study_log(log_id: str):
 
 
 @app.get("/api/github/activity")
-async def get_github_activity(
-        from_date: str | None = None, to_date: str | None = None):
+async def get_github_activity(from_date: str | None = None, to_date: str | None = None):
     if not GITHUB_USERNAME or not GITHUB_TOKEN:
         raise HTTPException(
             status_code=500, detail="GitHub integration is not configured."
@@ -898,8 +880,7 @@ async def receive_unipaa_assignments(request_body: UnipaaAssignmentsRequest):
     except Exception as e:
         # Allow continuing even if fetching fails, though sync will be
         # incomplete
-        print(
-            f"Warning: Failed to fetch Notion tasks, skipping sync. Error: {e}")
+        print(f"Warning: Failed to fetch Notion tasks, skipping sync. Error: {e}")
         return {"message": "Sync skipped: could not fetch Notion tasks."}
 
     notion_unipaa_tasks = [
@@ -1200,8 +1181,7 @@ async def get_accounting_entries(
                     "id": page["id"],
                     "date": date_prop.get("start") if date_prop else None,
                     "entry_type": (
-                        entry_type_prop.get(
-                            "name") if entry_type_prop else None
+                        entry_type_prop.get("name") if entry_type_prop else None
                     ),
                     "amount": amount_prop,
                     "category": category_prop.get("name") if category_prop else None,
@@ -1211,8 +1191,7 @@ async def get_accounting_entries(
                         else None
                     ),
                     "classification": (
-                        classification_prop.get(
-                            "name") if classification_prop else None
+                        classification_prop.get("name") if classification_prop else None
                     ),
                 }
             )
@@ -1259,35 +1238,13 @@ async def process_receipt(file: UploadFile = File(...)):
 
         model = genai.GenerativeModel("gemini-pro-vision")
 
-        prompt = """
-
-
-
-        Analyze this receipt image and extract the following information in JSON format:
-
-
-
-        - "date": The date of the transaction (in YYYY-MM-DD format).
-
-
-
-        - "description": The name of the store or a brief description of the purchase.
-
-
-
-        - "amount": The total amount of the transaction as a float.
-
-
-
-
-
-
-
-        If any of this information is not available, set the value to null.
-
-
-
-        """
+        prompt = (
+            "Analyze this receipt image and extract the following information in JSON format:\n"
+            '- "date": The date of the transaction (in YYYY-MM-DD format).\n'
+            '- "description": The name of the store or a brief description of the purchase.\n'
+            '- "amount": The total amount of the transaction as a float.\n\n'
+            "If any of this information is not available, set the value to null."
+        )
 
         response = model.generate_content([prompt, img])
 
@@ -1302,8 +1259,7 @@ async def process_receipt(file: UploadFile = File(...)):
 
         print(f"Error processing receipt: {e}")
 
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to process receipt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process receipt: {e}")
 
 
 class UpdateAccountingEntryRequest(BaseModel):

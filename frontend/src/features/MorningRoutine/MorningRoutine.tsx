@@ -86,6 +86,7 @@ export const MorningRoutine = () => {
             <button
               onClick={() => handleDeleteItem(routine.id)}
               className="delete-btn"
+              aria-label="削除"
             >
               ×
             </button>

@@ -35,6 +35,15 @@ export const PomodoroTimer = () => {
     localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify(modes));
   }, [modes]);
 
+  const switchMode = React.useCallback(
+    (newMode: Mode) => {
+      setIsActive(false);
+      setMode(newMode);
+      setTimeRemaining(modes[newMode].time * 60);
+    },
+    [modes],
+  );
+
   useEffect(() => {
     if (isActive) {
       intervalRef.current = setInterval(() => {
@@ -62,15 +71,6 @@ export const PomodoroTimer = () => {
       switchMode(nextMode);
     }
   }, [timeRemaining, mode, switchMode]);
-
-  const switchMode = React.useCallback(
-    (newMode: Mode) => {
-      setIsActive(false);
-      setMode(newMode);
-      setTimeRemaining(modes[newMode].time * 60);
-    },
-    [modes],
-  );
 
   const handleStartPause = () => {
     setIsActive(!isActive);
